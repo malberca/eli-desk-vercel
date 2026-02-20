@@ -5,7 +5,8 @@ import * as React from "react";
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { users } from "@/data/users";
+import { rootUser, type User } from "@/data/users";
+import { AUTH_COOKIE_NAME } from "@/config/auth";
 import { cn } from "@/lib/utils";
 
 import { AccountSwitcher } from "./sidebar/account-switcher";
@@ -28,6 +29,28 @@ export function DashboardShellClient({
   logoutAction,
   children,
 }: DashboardShellClientProps) {
+  const [sessionUsers, setSessionUsers] = React.useState<User[]>([rootUser]);
+
+  React.useEffect(() => {
+    try {
+      const raw = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith(`${AUTH_COOKIE_NAME}=`))
+        ?.split("=")
+        .slice(1)
+        .join("=");
+      if (raw) {
+        const data = JSON.parse(decodeURIComponent(raw));
+        setSessionUsers([{
+          id: data.id || "1",
+          name: data.name || "Admin",
+          email: data.email || "",
+          avatar: data.avatar || "",
+          role: "admin",
+        }]);
+      }
+    } catch { /* cookie parse */ }
+  }, []);
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -68,7 +91,7 @@ export function DashboardShellClient({
             <div className="flex items-center gap-2">
               <LayoutControls />
               <ThemeSwitcher />
-              <AccountSwitcher users={users} logoutAction={logoutAction} />
+              <AccountSwitcher users={sessionUsers} logoutAction={logoutAction} />
               </div>
           </div>
         </header>

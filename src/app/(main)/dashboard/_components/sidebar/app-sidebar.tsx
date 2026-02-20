@@ -91,7 +91,7 @@ export function AppSidebar({
           id: data.id || "1",
           name: data.name || "Admin",
           email: data.email || "",
-          avatar: "",
+          avatar: data.avatar || "",
           role: "admin",
         });
       }

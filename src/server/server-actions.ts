@@ -42,7 +42,7 @@ export async function loginAction(_prev: { error?: string }, formData: FormData)
 
   const { data: user, error } = await supabaseAdmin
     .from("admin_users")
-    .select("id, email, password_hash, name")
+    .select("id, email, password_hash, name, avatar_url")
     .eq("email", email)
     .single();
 
@@ -63,6 +63,7 @@ export async function loginAction(_prev: { error?: string }, formData: FormData)
       id: user.id,
       email: user.email,
       name: user.name,
+      avatar: user.avatar_url || "",
     }),
     {
       path: "/",
