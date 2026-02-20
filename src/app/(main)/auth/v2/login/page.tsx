@@ -1,44 +1,86 @@
-import Link from "next/link";
+"use client";
 
-import { Globe } from "lucide-react";
-
-import { APP_CONFIG } from "@/config/app-config";
+import Image from "next/image";
 
 import { LoginForm } from "../../_components/login-form";
-import { GoogleButton } from "../../_components/social-auth/google-button";
 
 export default function LoginV2() {
   return (
     <>
-      <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[350px]">
-        <div className="space-y-2 text-center">
-          <h1 className="font-medium text-3xl">Login to your account</h1>
-          <p className="text-muted-foreground text-sm">Please enter your details to login.</p>
-        </div>
-        <div className="space-y-4">
-          <GoogleButton className="w-full" />
-          <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-border after:border-t">
-            <span className="relative z-10 bg-background px-2 text-muted-foreground">Or continue with</span>
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-6px); }
+        }
+        @keyframes flicker {
+          0% { transform: scaleY(1) scaleX(1); opacity: 0.8; }
+          100% { transform: scaleY(1.3) scaleX(0.8); opacity: 1; }
+        }
+      `}</style>
+
+      <div className="mx-auto flex w-full flex-col items-center justify-center space-y-6 sm:w-[380px]">
+        {/* ELI Bot with rocket fire */}
+        <div className="relative flex flex-col items-center">
+          {/* Rocket fire glow */}
+          <div className="absolute -bottom-4 h-16 w-20 rounded-full bg-orange-500/20 blur-2xl animate-pulse" />
+          <div className="absolute -bottom-2 h-10 w-12 rounded-full bg-amber-400/30 blur-xl animate-pulse" />
+          
+          {/* Rocket fire flames */}
+          <div className="absolute -bottom-6 flex items-center justify-center gap-0.5">
+            <div 
+              className="h-8 w-1.5 rounded-full bg-gradient-to-t from-transparent via-orange-500 to-amber-300 opacity-90"
+              style={{ animation: "flicker 0.15s ease-in-out infinite alternate" }}
+            />
+            <div 
+              className="h-10 w-2 rounded-full bg-gradient-to-t from-transparent via-orange-400 to-yellow-200 opacity-95"
+              style={{ animation: "flicker 0.12s ease-in-out infinite alternate" }}
+            />
+            <div 
+              className="h-12 w-2.5 rounded-full bg-gradient-to-t from-transparent via-orange-500 to-amber-200"
+              style={{ animation: "flicker 0.1s ease-in-out infinite alternate" }}
+            />
+            <div 
+              className="h-10 w-2 rounded-full bg-gradient-to-t from-transparent via-orange-400 to-yellow-200 opacity-95"
+              style={{ animation: "flicker 0.13s ease-in-out infinite alternate" }}
+            />
+            <div 
+              className="h-8 w-1.5 rounded-full bg-gradient-to-t from-transparent via-orange-500 to-amber-300 opacity-90"
+              style={{ animation: "flicker 0.16s ease-in-out infinite alternate" }}
+            />
           </div>
+
+          {/* Bot image */}
+          <div className="relative z-10" style={{ animation: "float 3s ease-in-out infinite" }}>
+            <Image
+              src="/eli-bot.webp"
+              alt="ELI Bot"
+              width={140}
+              height={140}
+              className="drop-shadow-2xl"
+              priority
+            />
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="space-y-1 text-center pt-4">
+          <h1 className="font-bold text-2xl tracking-tight">ELI Desk</h1>
+          <p className="text-muted-foreground text-sm">
+            Panel de administración de consorcios
+          </p>
+        </div>
+
+        {/* Login Form */}
+        <div className="w-full space-y-4">
           <LoginForm />
         </div>
-      </div>
 
-      <div className="absolute top-5 flex w-full justify-end px-10">
-        <div className="text-muted-foreground text-sm">
-          Don&apos;t have an account?{" "}
-          <Link prefetch={false} className="text-foreground" href="register">
-            Register
-          </Link>
-        </div>
-      </div>
-
-      <div className="absolute bottom-5 flex w-full justify-between px-10">
-        <div className="text-sm">{APP_CONFIG.copyright}</div>
-        <div className="flex items-center gap-1 text-sm">
-          <Globe className="size-4 text-muted-foreground" />
-          ENG
-        </div>
+        {/* Footer */}
+        <p className="text-center text-xs text-muted-foreground pt-4">
+          Powered by{" "}
+          <span className="font-semibold text-foreground">MA—NO</span>
+          {" "}Consultora Digital
+        </p>
       </div>
     </>
   );

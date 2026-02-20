@@ -17,14 +17,20 @@ import { getInitials } from "@/lib/utils";
 
 export function NavUser({
   user,
+  logoutAction,
 }: {
   readonly user: {
     readonly name: string;
     readonly email: string;
     readonly avatar: string;
   };
+  readonly logoutAction: () => Promise<void>;
 }) {
   const { isMobile } = useSidebar();
+
+  const handleLogout = async () => {
+    await logoutAction();
+  };
 
   return (
     <SidebarMenu>
@@ -66,23 +72,26 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem disabled className="opacity-50">
                 <CircleUser />
-                Account
+                Mi cuenta
+                <span className="ml-auto text-xs text-muted-foreground">Soon</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem disabled className="opacity-50">
                 <CreditCard />
-                Billing
+                Facturación
+                <span className="ml-auto text-xs text-muted-foreground">Soon</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem disabled className="opacity-50">
                 <MessageSquareDot />
-                Notifications
+                Notificaciones
+                <span className="ml-auto text-xs text-muted-foreground">Soon</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
               <LogOut />
-              Log out
+              Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

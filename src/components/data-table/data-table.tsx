@@ -1,3 +1,4 @@
+"use client";
 "use no memo";
 
 import * as React from "react";
@@ -72,8 +73,8 @@ export function DataTable<TData, TValue>({
   dndEnabled = false,
   onReorder,
 }: DataTableProps<TData, TValue>) {
-  const dataIds: UniqueIdentifier[] = table.getRowModel().rows.map((row) => Number(row.id) as UniqueIdentifier);
-  const sortableId = React.useId();
+  const dataIds: UniqueIdentifier[] = table.getRowModel().rows.map((row) => row.id as UniqueIdentifier);
+  // const sortableId = React.useId();
   const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
 
   function handleDragEnd(event: DragEndEvent) {
@@ -116,7 +117,7 @@ export function DataTable<TData, TValue>({
         modifiers={[restrictToVerticalAxis]}
         onDragEnd={handleDragEnd}
         sensors={sensors}
-        id={sortableId}
+        // id={sortableId}
       >
         {tableContent}
       </DndContext>

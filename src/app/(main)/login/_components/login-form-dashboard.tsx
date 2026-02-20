@@ -1,0 +1,59 @@
+"use client";
+
+import { useActionState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { loginAction } from "@/server/server-actions";
+
+const initialState = { error: undefined as string | undefined };
+
+export function LoginFormDashboard() {
+  const [state, formAction, isPending] = useActionState(loginAction, initialState);
+
+  return (
+    <form action={formAction} className="space-y-4">
+      {state?.error && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-destructive text-sm">
+          {state.error}
+        </div>
+      )}
+      <div className="space-y-2">
+        <Label htmlFor="email">Correo electrónico</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="tu@ejemplo.com"
+          autoComplete="email"
+          required
+          disabled={isPending}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Contraseña</Label>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="••••••••"
+          autoComplete="current-password"
+          required
+          minLength={6}
+          disabled={isPending}
+        />
+      </div>
+      <div className="flex items-center space-x-2">
+        <Checkbox id="remember" name="remember" value="on" disabled={isPending} />
+        <Label htmlFor="remember" className="font-normal text-muted-foreground text-sm">
+          Recordarme 30 días
+        </Label>
+      </div>
+      <Button className="w-full" type="submit" disabled={isPending}>
+        {isPending ? "Entrando…" : "Entrar"}
+      </Button>
+    </form>
+  );
+}

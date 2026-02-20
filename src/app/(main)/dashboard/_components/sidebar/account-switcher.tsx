@@ -17,6 +17,7 @@ import { cn, getInitials } from "@/lib/utils";
 
 export function AccountSwitcher({
   users,
+  logoutAction,
 }: {
   readonly users: ReadonlyArray<{
     readonly id: string;
@@ -25,13 +26,18 @@ export function AccountSwitcher({
     readonly avatar: string;
     readonly role: string;
   }>;
+  readonly logoutAction: () => Promise<void>;
 }) {
   const [activeUser, setActiveUser] = useState(users[0]);
+
+  const handleLogout = async () => {
+    await logoutAction();
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="size-9 rounded-lg">
+        <Avatar className="size-9 rounded-lg cursor-pointer">
           <AvatarImage src={activeUser.avatar || undefined} alt={activeUser.name} />
           <AvatarFallback className="rounded-lg">{getInitials(activeUser.name)}</AvatarFallback>
         </Avatar>
@@ -57,23 +63,26 @@ export function AccountSwitcher({
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled className="opacity-50">
             <BadgeCheck />
-            Account
+            Mi cuenta
+            <span className="ml-auto text-xs text-muted-foreground">Soon</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled className="opacity-50">
             <CreditCard />
-            Billing
+            Facturación
+            <span className="ml-auto text-xs text-muted-foreground">Soon</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled className="opacity-50">
             <Bell />
-            Notifications
+            Notificaciones
+            <span className="ml-auto text-xs text-muted-foreground">Soon</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           <LogOut />
-          Log out
+          Cerrar sesión
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

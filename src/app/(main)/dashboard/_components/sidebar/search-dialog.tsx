@@ -1,7 +1,16 @@
 "use client";
 import * as React from "react";
 
-import { ChartBar, Forklift, Gauge, GraduationCap, LayoutDashboard, Search, ShoppingBag } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+import {
+  ChartBar,
+  Forklift,
+  Gauge,
+  LayoutDashboard,
+  Search,
+  ShoppingBag,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,30 +23,43 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 
-const searchItems = [
-  { group: "Dashboards", icon: LayoutDashboard, label: "Default" },
-  { group: "Dashboards", icon: ChartBar, label: "CRM", disabled: true },
-  { group: "Dashboards", icon: Gauge, label: "Analytics", disabled: true },
-  { group: "Dashboards", icon: ShoppingBag, label: "E-Commerce", disabled: true },
-  { group: "Dashboards", icon: GraduationCap, label: "Academy", disabled: true },
-  { group: "Dashboards", icon: Forklift, label: "Logistics", disabled: true },
-  { group: "Authentication", label: "Login v1" },
-  { group: "Authentication", label: "Login v2" },
-  { group: "Authentication", label: "Register v1" },
-  { group: "Authentication", label: "Register v2" },
+type SearchItem = {
+  group: string;
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  href?: string;
+  disabled?: boolean;
+};
+
+const searchItems: SearchItem[] = [
+  { group: "ELI Desk", icon: LayoutDashboard, label: "Monitor", href: "/dashboard/default" },
+
+  { group: "ELI Desk", icon: ChartBar, label: "Reclamos", href: "/dashboard/reclamos", disabled: true },
+  { group: "ELI Desk", icon: Gauge, label: "Urgencias", href: "/dashboard/urgencias", disabled: true },
+
+  { group: "Operación", icon: Forklift, label: "Edificios", href: "/dashboard/edificios", disabled: true },
+  { group: "Operación", icon: ShoppingBag, label: "Proveedores", href: "/dashboard/proveedores", disabled: true },
+  { group: "Operación", icon: ChartBar, label: "Reportes", href: "/dashboard/reportes", disabled: true },
+  { group: "Operación", icon: ShoppingBag, label: "Finanzas", href: "/dashboard/finanzas", disabled: true },
 ];
 
 export function SearchDialog() {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
+
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "j" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((open) => !open);
+        setOpen((prev) => !prev);
       }
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
+  }, []);
+
+  const groups = React.useMemo(() => {
+    return Array.from(new Set(searchItems.map((item) => item.group)));
   }, []);
 
   return (
@@ -48,25 +70,41 @@ export function SearchDialog() {
         onClick={() => setOpen(true)}
       >
         <Search className="size-4" />
-        Search
+        Buscar
         <kbd className="inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium text-[10px]">
           <span className="text-xs">⌘</span>J
         </kbd>
       </Button>
+
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Search dashboards, users, and more…" />
+        <CommandInput placeholder="Buscar módulos de ELI Desk…" />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          {[...new Set(searchItems.map((item) => item.group))].map((group, i) => (
+          <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+
+          {groups.map((group, i) => (
             <React.Fragment key={group}>
               {i !== 0 && <CommandSeparator />}
-              <CommandGroup heading={group} key={group}>
+
+              <CommandGroup heading={group}>
                 {searchItems
                   .filter((item) => item.group === group)
                   .map((item) => (
-                    <CommandItem className="!py-1.5" key={item.label} onSelect={() => setOpen(false)}>
+                    <CommandItem
+                      key={item.label}
+                      className={`!py-1.5 ${item.disabled ? "opacity-50 pointer-events-none" : ""}`}
+                      onSelect={() => {
+                        if (item.disabled) return;
+                        if (item.href) router.push(item.href);
+                        setOpen(false);
+                      }}
+                    >
                       {item.icon && <item.icon />}
-                      <span>{item.label}</span>
+                      <span className="flex-1">{item.label}</span>
+                      {item.disabled && (
+                        <span className="ml-2 rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">
+                          Próximamente
+                        </span>
+                      )}
                     </CommandItem>
                   ))}
               </CommandGroup>

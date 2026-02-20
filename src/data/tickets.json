@@ -1,0 +1,103 @@
+[
+  {
+    "id": "TCK-1001",
+    "title": "Ascensor fuera servicio",
+    "createdAt": "2026-02-08T09:15:00Z",
+    "status": "PENDIENTE",
+    "consorcio": "Consorcio Av. Libertador 1234",
+    "proveedor": "Elevadores Delta SA",
+    "tag": "ascensor",
+    "priority": 1
+  },
+  {
+    "id": "TCK-1002",
+    "title": "Filtración terraza piso 6",
+    "createdAt": "2026-02-09T11:40:00Z",
+    "status": "EN_CURSO",
+    "consorcio": "Consorcio Cabildo 455",
+    "proveedor": "Plomería García SRL",
+    "tag": "plomeria",
+    "priority": 1
+  },
+  {
+    "id": "TCK-1003",
+    "title": "Luz palier intermitente",
+    "createdAt": "2026-02-10T08:25:00Z",
+    "status": "PENDIENTE",
+    "consorcio": "Consorcio Corrientes 789",
+    "proveedor": "ElectroFix SA",
+    "tag": "electricidad",
+    "priority": 2
+  },
+  {
+    "id": "TCK-1004",
+    "title": "Desinfección tanque agua",
+    "createdAt": "2026-02-05T14:10:00Z",
+    "status": "FINALIZADO",
+    "consorcio": "Consorcio Av. Santa Fe 2200",
+    "proveedor": "Higiene Urbana SRL",
+    "tag": "desinfeccion",
+    "priority": 2
+  },
+  {
+    "id": "TCK-1005",
+    "title": "Pintura hall ingreso",
+    "createdAt": "2026-02-07T16:30:00Z",
+    "status": "EN_CURSO",
+    "consorcio": "Consorcio Av. Libertador 1234",
+    "proveedor": "Pinturas del Sur SA",
+    "tag": "pintura",
+    "priority": 3
+  },
+  {
+    "id": "TCK-1006",
+    "title": "Portón eléctrico trabado",
+    "createdAt": "2026-02-10T12:00:00Z",
+    "status": "PENDIENTE",
+    "consorcio": "Consorcio Belgrano 330",
+    "proveedor": "Automatizaciones Norte",
+    "tag": "tecnico",
+    "priority": 1
+  },
+  {
+    "id": "TCK-1007",
+    "title": "Mantenimiento bombas agua",
+    "createdAt": "2026-02-03T10:45:00Z",
+    "status": "FINALIZADO",
+    "consorcio": "Consorcio Cabildo 455",
+    "proveedor": "Servicios Hidráulicos SA",
+    "tag": "mantenimiento",
+    "priority": 2
+  },
+  {
+    "id": "TCK-1008",
+    "title": "Cambio luminaria cochera",
+    "createdAt": "2026-02-11T07:20:00Z",
+    "status": "PENDIENTE",
+    "consorcio": "Consorcio Corrientes 789",
+    "proveedor": "ElectroFix SA",
+    "tag": "electricidad",
+    "priority": 2
+  },
+  {
+    "id": "TCK-1009",
+    "title": "Revisión matafuegos anual",
+    "createdAt": "2026-02-01T09:00:00Z",
+    "status": "EN_CURSO",
+    "consorcio": "Consorcio Av. Santa Fe 2200",
+    "proveedor": "Seguridad Integral SRL",
+    "tag": "seguridad",
+    "priority": 2
+  },
+  {
+    "id": "TCK-1010",
+    "title": "Limpieza desagüe terraza",
+    "createdAt": "2026-02-06T15:55:00Z",
+    "status": "PENDIENTE",
+    "consorcio": "Consorcio Belgrano 330",
+    "proveedor": "Plomería García SRL",
+    "tag": "plomeria",
+    "priority": 3
+  }
+]
+

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "T-001",
+    "title": "Filtración en terraza",
+    "createdAt": "2026-02-10T10:00:00Z",
+    "status": "PENDIENTE",
+    "consorcio": "Edificio Libertad 123",
+    "proveedor": "Impermeabilizaciones SRL",
+    "tag": "tecnico"
+  },
+  {
+    "id": "T-002",
+    "title": "Pintura hall entrada",
+    "createdAt": "2026-02-09T09:00:00Z",
+    "status": "EN_CURSO",
+    "consorcio": "Torre Norte",
+    "proveedor": "Pinturas Modernas SA",
+    "tag": "pintura"
+  },
+  {
+    "id": "T-003",
+    "title": "Desinfección tanque",
+    "createdAt": "2026-02-08T08:00:00Z",
+    "status": "FINALIZADO",
+    "consorcio": "Consorcio Belgrano 456",
+    "proveedor": "Higiene Total",
+    "tag": "desinfeccion"
+  }
+]

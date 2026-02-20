@@ -1,9 +1,18 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ChevronRight, MailIcon, PlusCircleIcon } from "lucide-react";
+import {
+  ChevronRight,
+  MailIcon,
+  PlusCircleIcon,
+  TicketPlus,
+  Building2,
+  Truck,
+  FileBarChart,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -11,6 +20,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -26,9 +36,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { NavGroup, NavMainItem } from "@/navigation/sidebar/sidebar-items";
+import { CreateTicketDialog } from "@/app/(main)/dashboard/_components/ticket-dialog";
 
 interface NavMainProps {
   readonly items: readonly NavGroup[];
+  readonly onTicketCreated?: () => void;
 }
 
 const IsComingSoon = () => (
@@ -141,9 +153,10 @@ const NavItemCollapsed = ({
   );
 };
 
-export function NavMain({ items }: NavMainProps) {
+export function NavMain({ items, onTicketCreated }: NavMainProps) {
   const path = usePathname();
   const { state, isMobile } = useSidebar();
+  const [ticketDialogOpen, setTicketDialogOpen] = React.useState(false);
 
   const isItemActive = (url: string, subItems?: NavMainItem["subItems"]) => {
     if (subItems?.length) {
@@ -162,13 +175,39 @@ export function NavMain({ items }: NavMainProps) {
         <SidebarGroupContent className="flex flex-col gap-2">
           <SidebarMenu>
             <SidebarMenuItem className="flex items-center gap-2">
-              <SidebarMenuButton
-                tooltip="Quick Create"
-                className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
-              >
-                <PlusCircleIcon />
-                <span>Quick Create</span>
-              </SidebarMenuButton>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    tooltip="Quick Create"
+                    className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+                  >
+                    <PlusCircleIcon />
+                    <span>Quick Create</span>
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" className="w-52">
+                  <DropdownMenuItem onClick={() => setTicketDialogOpen(true)}>
+                    <TicketPlus className="mr-2 h-4 w-4" />
+                    Nuevo Ticket
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled className="opacity-50">
+                    <Building2 className="mr-2 h-4 w-4" />
+                    Nuevo Edificio
+                    <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="opacity-50">
+                    <Truck className="mr-2 h-4 w-4" />
+                    Nuevo Proveedor
+                    <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="opacity-50">
+                    <FileBarChart className="mr-2 h-4 w-4" />
+                    Nuevo Reporte
+                    <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 size="icon"
                 className="h-9 w-9 shrink-0 group-data-[collapsible=icon]:opacity-0"
@@ -181,6 +220,7 @@ export function NavMain({ items }: NavMainProps) {
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
+
       {items.map((group) => (
         <SidebarGroup key={group.id}>
           {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
@@ -188,7 +228,6 @@ export function NavMain({ items }: NavMainProps) {
             <SidebarMenu>
               {group.items.map((item) => {
                 if (state === "collapsed" && !isMobile) {
-                  // If no subItems, just render the button as a link
                   if (!item.subItems) {
                     return (
                       <SidebarMenuItem key={item.title}>
@@ -206,10 +245,8 @@ export function NavMain({ items }: NavMainProps) {
                       </SidebarMenuItem>
                     );
                   }
-                  // Otherwise, render the dropdown as before
                   return <NavItemCollapsed key={item.title} item={item} isActive={isItemActive} />;
                 }
-                // Expanded view
                 return (
                   <NavItemExpanded key={item.title} item={item} isActive={isItemActive} isSubmenuOpen={isSubmenuOpen} />
                 );
@@ -218,6 +255,13 @@ export function NavMain({ items }: NavMainProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       ))}
+
+      {/* Ticket creation modal */}
+      <CreateTicketDialog
+        open={ticketDialogOpen}
+        onOpenChange={setTicketDialogOpen}
+        onCreated={onTicketCreated}
+      />
     </>
   );
 }
