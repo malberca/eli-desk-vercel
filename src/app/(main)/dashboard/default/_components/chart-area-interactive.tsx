@@ -36,11 +36,11 @@ const chartConfig = {
   date: { label: "Fecha" },
   abiertos: {
     label: "Tickets abiertos",
-    color: "var(--destructive)",
+    color: "hsl(215, 70%, 60%)",
   },
   cerrados: {
     label: "Tickets cerrados",
-    color: "var(--chart-1)",
+    color: "hsl(0, 0%, 65%)",
   },
 } satisfies ChartConfig
 

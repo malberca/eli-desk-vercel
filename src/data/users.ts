@@ -1,12 +1,17 @@
-export const users = [
-  {
-    id: "1",
-    name: "Carolina Bianco",
-    username: "cbianco",
-    email: "adm.biancoc@gmail.com",
-    avatar: "",
-    role: "Administrador de Consorcios",
-  },
-];
+export interface User {
+  readonly id: string
+  readonly name: string
+  readonly email: string
+  readonly avatar: string
+  readonly role: string
+}
 
-export const rootUser = users[0];
+export const rootUser: User = {
+  id: "1",
+  name: "ELI Admin",
+  email: "admin@ma-no.work",
+  avatar: "",
+  role: "admin",
+}
+
+export const users: readonly User[] = [rootUser] as const
