@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -16,7 +18,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { APP_CONFIG } from "@/config/app-config";
-import { rootUser } from "@/data/users";
+import { AUTH_COOKIE_NAME } from "@/config/auth";
+import { rootUser, type User } from "@/data/users";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
@@ -72,6 +75,31 @@ export function AppSidebar({
     })),
   );
 
+  const [sessionUser, setSessionUser] = useState<User>(rootUser);
+
+  useEffect(() => {
+    try {
+      const raw = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith(`${AUTH_COOKIE_NAME}=`))
+        ?.split("=")
+        .slice(1)
+        .join("=");
+      if (raw) {
+        const data = JSON.parse(decodeURIComponent(raw));
+        setSessionUser({
+          id: data.id || "1",
+          name: data.name || "Admin",
+          email: data.email || "",
+          avatar: "",
+          role: "admin",
+        });
+      }
+    } catch {
+      /* cookie parse error */
+    }
+  }, []);
+
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
 
@@ -82,20 +110,8 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link prefetch={false} href="/dashboard/default">
-              <Image
-                src="/eli-logo.svg"
-                alt="ELI"
-                width={20}
-                height={20}
-                className="size-5 dark:hidden"
-              />
-              <Image
-                src="/eli-logow.svg"
-                alt="ELI"
-                width={20}
-                height={20}
-                className="size-5 hidden dark:block"
-              />
+                <Image src="/eli-logo.svg" alt="ELI" width={20} height={20} className="size-5 dark:hidden" />
+                <Image src="/eli-logow.svg" alt="ELI" width={20} height={20} className="hidden size-5 dark:block" />
                 <span className="font-semibold text-base">{APP_CONFIG.name}</span>
               </Link>
             </SidebarMenuButton>
@@ -108,7 +124,7 @@ export function AppSidebar({
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={rootUser} logoutAction={logoutAction} />
+        <NavUser user={sessionUser} logoutAction={logoutAction} />
       </SidebarFooter>
     </Sidebar>
   );

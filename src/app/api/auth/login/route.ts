@@ -1,18 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { AUTH_COOKIE_NAME } from "@/config/auth";
+import bcrypt from "bcryptjs";
 
-// MVP: admin credentials
-// TODO: migrate to Supabase Auth
-const ADMIN_USERS = [
-  {
-    email: "adm.biancoc@gmail.com",
-    password: "eli2025",
-    name: "Carolina Bianco",
-    role: "Administrador de Consorcios",
-  },
-];
+import { AUTH_COOKIE_NAME } from "@/config/auth";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -23,25 +15,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ingresá email y contraseña." }, { status: 400 });
   }
 
-  const admin = ADMIN_USERS.find(
-    (u) => u.email.toLowerCase() === email && u.password === password
-  );
+  const { data: user, error } = await supabaseAdmin
+    .from("admin_users")
+    .select("email, password_hash, name")
+    .eq("email", email)
+    .single();
 
-  if (!admin) {
+  if (error || !user) {
+    console.error("Login DB error:", error);
+    return NextResponse.json({ error: "Email o contraseña incorrectos." }, { status: 401 });
+  }
+
+  const match = await bcrypt.compare(password, user.password_hash);
+  if (!match) {
     return NextResponse.json({ error: "Email o contraseña incorrectos." }, { status: 401 });
   }
 
   const cookieStore = await cookies();
-  cookieStore.set(AUTH_COOKIE_NAME, JSON.stringify({
-    email: admin.email,
-    name: admin.name,
-    role: admin.role,
-  }), {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 days
-    httpOnly: true,
-    sameSite: "lax",
-  });
+  cookieStore.set(
+    AUTH_COOKIE_NAME,
+    JSON.stringify({
+      email: user.email,
+      name: user.name,
+      role: "admin",
+    }),
+    {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+      httpOnly: true,
+      sameSite: "lax",
+    },
+  );
 
   return NextResponse.json({ success: true });
 }
