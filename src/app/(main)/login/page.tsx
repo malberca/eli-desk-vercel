@@ -63,11 +63,18 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="absolute bottom-5 flex w-full justify-between px-6 sm:px-10">
+      <div className="absolute bottom-5 flex w-full items-center justify-between px-6 sm:px-10">
         <div className="text-muted-foreground text-sm">{APP_CONFIG.copyright}</div>
-        <div className="flex items-center gap-1 text-muted-foreground text-sm">
-          <Globe className="size-4" />
-          ES
+        <div className="flex items-center gap-2">
+          <img
+            src="/mano-gr.svg"
+            alt="MA-NO"
+            className="h-5 w-auto opacity-40 hover:opacity-70 transition-opacity"
+          />
+          <span className="flex items-center gap-1 text-muted-foreground text-sm">
+            <Globe className="size-4" />
+            ES
+          </span>
         </div>
       </div>
     </>

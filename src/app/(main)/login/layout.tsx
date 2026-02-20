@@ -1,17 +1,19 @@
 import type { ReactNode } from "react";
 
-import { Building2 } from "lucide-react";
-
 import { Separator } from "@/components/ui/separator";
 import { APP_CONFIG } from "@/config/app-config";
 
 export default function LoginLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <main>
+    <main className="dark bg-background text-foreground">
       <div className="grid h-dvh justify-center p-2 lg:grid-cols-2">
         <div className="relative order-2 hidden h-full rounded-3xl bg-primary lg:flex">
-          <div className="absolute top-10 space-y-1 px-10 text-primary-foreground">
-            <Building2 className="size-10" />
+          <div className="absolute top-10 space-y-4 px-10 text-primary-foreground">
+            <img
+              src="/eli-gr.svg"
+              alt="ELI"
+              className="h-16 w-auto brightness-0 invert"
+            />
             <h1 className="font-medium text-2xl">{APP_CONFIG.loginName}</h1>
             <p className="text-sm opacity-90">Panel de control para administradores de edificios.</p>
           </div>
