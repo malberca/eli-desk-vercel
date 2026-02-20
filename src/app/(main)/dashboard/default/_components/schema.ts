@@ -11,3 +11,5 @@ import { z } from "zod";
     priority: z.number().int().min(1).max(3), // 1 = alta
   });
   export type Ticket = z.infer<typeof ticketSchema>;
+
+export const sectionSchema = ticketSchema;
