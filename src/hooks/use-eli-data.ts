@@ -23,6 +23,7 @@ export interface TicketRow {
   updated_at: string | null
   edificio_nombre: string | null
   edificio_id: string | null
+  chat_id: string | null
   data: Record<string, unknown> | null
 }
 
@@ -170,7 +171,7 @@ export function useTickets() {
         .select(`
           id, ticket_code, ticket_type, priority, category, 
           description, status, created_at, updated_at,
-          edificio_id, data,
+          edificio_id, chat_id, data,
           edificios ( nombre )
         `)
         .is('deleted_at', null)
@@ -189,6 +190,7 @@ export function useTickets() {
         created_at: t.created_at,
         updated_at: t.updated_at,
         edificio_id: t.edificio_id,
+        chat_id: t.chat_id ?? null,
         edificio_nombre: t.edificios?.nombre ?? null,
         data: t.data,
       }))
