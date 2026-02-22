@@ -219,11 +219,26 @@ export async function updateTicket(
     description: string
     edificio_id: string
     data: Record<string, unknown>
+    closed_reason: string
+    closed_by: string
+    closed_at: string
   }>
 ): Promise<{ success: boolean; error?: string }> {
+  const updateFields: Record<string, unknown> = {
+    ...fields,
+    updated_at: new Date().toISOString(),
+  }
+
+  // If reopening, clear closed fields
+  if (fields.status && fields.status !== 'cerrado') {
+    updateFields.closed_reason = null
+    updateFields.closed_by = null
+    updateFields.closed_at = null
+  }
+
   const { error } = await supabase
     .from('tickets')
-    .update({ ...fields, updated_at: new Date().toISOString() })
+    .update(updateFields)
     .eq('id', id)
 
   if (error) return { success: false, error: error.message }
@@ -250,13 +265,14 @@ export async function softDeleteTicket(
   return { success: true }
 }
 
-// ─── Mutation: Create Ticket ─────────────────────────────────────────
+// ─── Mutation: Updated Create Ticket ─────────────────────────────────────────
 export async function createTicket(input: {
   edificio_id: string
   ticket_type: string
   priority: string
   description: string
   tags?: string[]
+  created_by?: string
 }): Promise<{ success: boolean; error?: string }> {
   const { error } = await supabase.from('tickets').insert({
     chat_id: 'dashboard-manual',
@@ -268,6 +284,7 @@ export async function createTicket(input: {
     status: 'abierto',
     edificio_id: input.edificio_id,
     data: { tags: input.tags ?? [], source: 'dashboard' },
+    created_by: input.created_by ?? 'dashboard',
   })
 
   if (error) return { success: false, error: error.message }

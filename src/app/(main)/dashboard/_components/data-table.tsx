@@ -121,7 +121,9 @@ function TicketActions({
               En proceso
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => handleUpdate({ status: "cerrado" })}
+              onClick={() => {
+                onEdit({ ...ticket, status: "cerrado" })
+              }}
               disabled={ticket.status === "cerrado"}
             >
               <CheckCircle2 className="mr-2 h-3.5 w-3.5 text-green-500" />
