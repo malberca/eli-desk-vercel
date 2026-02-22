@@ -46,7 +46,6 @@ export function EditTicketDialog({ ticket, open, onOpenChange, onUpdated }: Edit
   const [saving, setSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  // Track the original DB status (before any override from the dropdown)
   const originalDbStatus = React.useRef<string>("")
 
   React.useEffect(() => {
@@ -63,8 +62,6 @@ export function EditTicketDialog({ ticket, open, onOpenChange, onUpdated }: Edit
       setClosedReason("")
       setError(null)
 
-      // If ticket comes with status "cerrado" but has no closed_at,
-      // it means it was forced from the dropdown — the real DB status is not cerrado
       const hasClosedAt = !!(ticket as any).closed_at
       if (ticket.status === "cerrado" && !hasClosedAt) {
         originalDbStatus.current = "abierto"
@@ -155,6 +152,24 @@ export function EditTicketDialog({ ticket, open, onOpenChange, onUpdated }: Edit
     }
 
     onOpenChange(false)
+
+    // Notify vecino via Telegram when closing a chatbot ticket
+    if (isClosing && ticket.data && (ticket.data as any).source !== "dashboard") {
+      try {
+        fetch("https://n8n.ma-no.work/webhook/eli-ticket-closed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: (ticket as any).chat_id || "",
+            ticket_code: ticket.ticket_code,
+            closed_reason: closedReason.trim(),
+            closed_by: closedBy,
+            description: ticket.description || "",
+          }),
+        }).catch(() => {})
+      } catch {}
+    }
+
     onUpdated?.()
   }
 
