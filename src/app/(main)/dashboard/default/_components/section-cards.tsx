@@ -51,7 +51,7 @@ export function SectionCards() {
   const { metrics, loading } = useDashboardMetrics()
 
   return (
-    <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <MetricCard
         title="Edificios activos"
         value={metrics.edificios}
