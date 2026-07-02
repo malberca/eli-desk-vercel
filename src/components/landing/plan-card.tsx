@@ -31,10 +31,18 @@ export function PlanCard({ plan, featured, onSelectPlan }: PlanCardProps) {
   return (
     <article
       className={cn(
-        "flex flex-col rounded-2xl border p-6 shadow-sm",
-        featured ? "border-primary/40 bg-card ring-1 ring-primary/20" : "border-border/70 bg-card",
+        "relative flex flex-col rounded-2xl border p-6 transition-[border-color,box-shadow]",
+        featured
+          ? "z-10 border-primary/40 bg-white shadow-xl shadow-primary/25 ring-1 ring-primary/25 lg:-mt-1 lg:mb-1 lg:scale-[1.02]"
+          : "border-border/60 bg-white shadow-sm hover:border-primary/20 hover:shadow-md hover:shadow-primary/[0.04]",
       )}
     >
+      {featured ? (
+        <div
+          className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+          aria-hidden
+        />
+      ) : null}
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="font-semibold text-lg">{plan.name}</h3>
@@ -79,7 +87,12 @@ export function PlanCard({ plan, featured, onSelectPlan }: PlanCardProps) {
           })}
         </div>
 
-        <div className="space-y-1 rounded-xl bg-muted/30 p-4">
+        <div
+          className={cn(
+            "space-y-1 rounded-xl border p-4",
+            featured ? "border-primary/20 bg-slate-50" : "border-border/50 bg-slate-50/80",
+          )}
+        >
           <p className="text-muted-foreground text-xs">
             Mensual: <span className="font-medium text-foreground">{formatEliPrice(monthly)}</span>
           </p>

@@ -28,7 +28,10 @@ export function ModulesSection() {
       </div>
       <div className="mt-10 grid gap-4 sm:grid-cols-2">
         {MODULES.map((mod) => (
-          <article key={mod.title} className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm">
+          <article
+            key={mod.title}
+            className="rounded-2xl border border-border/60 bg-gradient-to-br from-white to-slate-50/50 p-6 shadow-sm shadow-slate-200/40"
+          >
             <h3 className="font-medium text-foreground">{mod.title}</h3>
             <p className="mt-2 text-muted-foreground text-sm leading-relaxed">{mod.description}</p>
           </article>

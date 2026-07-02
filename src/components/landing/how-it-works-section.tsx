@@ -1,3 +1,5 @@
+import { LANDING_GRADIENT_ASSETS, LandingGradientGlow } from "./landing-gradient-glow";
+
 const STEPS = [
   {
     step: "01",
@@ -23,16 +25,26 @@ const STEPS = [
 
 export function HowItWorksSection() {
   return (
-    <section id="como-funciona" className="scroll-mt-24 py-12 sm:py-16">
-      <div className="mx-auto max-w-2xl text-center">
+    <section id="como-funciona" className="relative scroll-mt-24 overflow-hidden py-12 sm:py-16">
+      <LandingGradientGlow
+        src={LANDING_GRADIENT_ASSETS.solution}
+        className="inset-x-0 top-0 h-56 sm:h-72"
+        imageClassName="object-center object-top scale-110"
+        opacity={0.1}
+        sizes="(max-width: 768px) 100vw, 1152px"
+      />
+      <div className="relative mx-auto max-w-2xl text-center">
         <h2 className="font-semibold text-2xl tracking-tight sm:text-3xl">Cómo funciona ELI</h2>
         <p className="mt-3 text-muted-foreground text-sm leading-relaxed sm:text-base">
           Una capa operativa: canal de entrada, registro estructurado y panel de control para cada edificio.
         </p>
       </div>
-      <ol className="mt-10 grid gap-6 sm:grid-cols-2">
+      <ol className="relative mt-10 grid gap-6 sm:grid-cols-2">
         {STEPS.map((item) => (
-          <li key={item.step} className="flex gap-4 rounded-2xl border border-border/70 p-5">
+          <li
+            key={item.step}
+            className="flex gap-4 rounded-2xl border border-border/60 bg-white/80 p-5 shadow-sm shadow-slate-100/60"
+          >
             <span className="font-semibold text-primary text-sm tabular-nums">{item.step}</span>
             <div>
               <h3 className="font-medium text-foreground">{item.title}</h3>

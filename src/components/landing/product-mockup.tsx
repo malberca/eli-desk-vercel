@@ -2,6 +2,8 @@ import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 
+import { LANDING_GRADIENT_ASSETS, LandingGradientGlow } from "./landing-gradient-glow";
+
 function MockCard({
   className,
   title,
@@ -14,7 +16,12 @@ function MockCard({
   accent?: string;
 }) {
   return (
-    <div className={cn("rounded-xl border border-border/80 bg-card/95 p-3 shadow-sm backdrop-blur-sm", className)}>
+    <div
+      className={cn(
+        "rounded-xl border border-border/70 bg-white/95 p-3 shadow-md shadow-primary/[0.04] backdrop-blur-sm",
+        className,
+      )}
+    >
       {accent ? <p className="mb-1 font-medium text-[10px] text-primary uppercase tracking-wider">{accent}</p> : null}
       <p className="font-medium text-foreground text-xs leading-snug">{title}</p>
       <p className="mt-0.5 text-muted-foreground text-[11px]">{subtitle}</p>
@@ -26,10 +33,18 @@ export function ProductMockup() {
   return (
     <div className="relative mx-auto w-full max-w-2xl">
       <div
-        className="pointer-events-none absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-b from-primary/25 via-primary/10 to-transparent blur-3xl"
+        className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[90%] w-[95%] -translate-x-1/2 -translate-y-1/2"
         aria-hidden
-      />
-      <div className="relative grid min-h-[280px] place-items-center rounded-[1.75rem] border border-border/50 bg-gradient-to-br from-muted/30 to-background p-6 sm:min-h-[340px] sm:p-10">
+      >
+        <LandingGradientGlow
+          src={LANDING_GRADIENT_ASSETS.hero}
+          className="inset-0"
+          imageClassName="object-center blur-3xl scale-110"
+          opacity={0.34}
+          sizes="(max-width: 768px) 100vw, 672px"
+        />
+      </div>
+      <div className="relative grid min-h-[280px] place-items-center rounded-[1.75rem] border border-border/50 bg-gradient-to-br from-primary/[0.03] via-muted/25 to-sky-50/40 p-6 shadow-xl shadow-primary/[0.06] sm:min-h-[340px] sm:p-10">
         <MockCard
           className="absolute top-6 left-4 max-w-[200px] sm:left-8"
           accent="Chat"
@@ -55,7 +70,7 @@ export function ProductMockup() {
           subtitle="Monitor en tiempo real"
         />
         <div className="relative z-10 flex flex-col items-center gap-2">
-          <div className="rounded-2xl bg-background/80 p-2 shadow-lg ring-1 ring-border/60">
+          <div className="rounded-2xl bg-white/90 p-2 shadow-lg shadow-primary/10 ring-1 ring-primary/15">
             <Image
               src="/eli-bot.webp"
               alt="ELI"

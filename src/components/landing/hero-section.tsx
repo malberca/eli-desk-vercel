@@ -7,8 +7,8 @@ import { ProductMockup } from "./product-mockup";
 
 export function HeroSection() {
   return (
-    <section className="flex flex-col gap-10 py-4 text-center sm:py-8">
-      <div className="mx-auto flex max-w-3xl flex-col items-center gap-5">
+    <section className="flex flex-col gap-10 py-4 text-center sm:gap-12 sm:py-10">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-5 px-4">
         <Badge variant="secondary" className="rounded-full px-4 py-1 font-normal text-xs">
           Asistente inteligente para administraciones de consorcios
         </Badge>
@@ -28,6 +28,7 @@ export function HeroSection() {
           </Button>
         </div>
       </div>
+
       <ProductMockup />
     </section>
   );
