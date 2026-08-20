@@ -3,6 +3,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { getAuthContext } from "@/lib/auth/get-auth-context";
+import { getAuthDestination } from "@/lib/auth/get-auth-destination";
+
 export async function getValueFromCookie(key: string): Promise<string | undefined> {
   const cookieStore = await cookies();
   return cookieStore.get(key)?.value;
@@ -21,11 +24,7 @@ export async function setValueToCookie(
   });
 }
 
-export async function getPreference<T extends string>(
-  key: string,
-  allowed: readonly T[],
-  fallback: T,
-): Promise<T> {
+export async function getPreference<T extends string>(key: string, allowed: readonly T[], fallback: T): Promise<T> {
   const cookieStore = await cookies();
   const cookie = cookieStore.get(key);
   const value = cookie ? cookie.value.trim() : undefined;
@@ -33,10 +32,7 @@ export async function getPreference<T extends string>(
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
 
-export async function loginAction(
-  _prev: { error?: string },
-  formData: FormData,
-): Promise<{ error?: string }> {
+export async function loginAction(_prev: { error?: string }, formData: FormData): Promise<{ error?: string }> {
   const email = (formData.get("email") as string)?.trim().toLowerCase();
   const password = formData.get("password") as string;
 
@@ -60,7 +56,9 @@ export async function loginAction(
     };
   }
 
-  redirect("/dashboard/default");
+  const context = await getAuthContext(supabase);
+
+  redirect(getAuthDestination(context));
 }
 
 export async function logoutAction(): Promise<void> {
@@ -96,10 +94,6 @@ export async function getLoggedAdmin(): Promise<{
   return {
     id: user.id,
     email: user.email ?? "",
-    name:
-      user.user_metadata?.full_name ??
-      user.user_metadata?.name ??
-      user.email ??
-      "Usuario",
+    name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email ?? "Usuario",
   };
 }

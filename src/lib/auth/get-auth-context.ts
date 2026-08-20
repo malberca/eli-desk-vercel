@@ -26,6 +26,11 @@ type MembershipRow = {
   status: string;
 };
 
+type AuthIdentity = {
+  userId: string;
+  email?: string | null;
+};
+
 const ACTIVE_STATUS = "active";
 
 function isPlatformRole(role: string): role is PlatformRole {
@@ -53,6 +58,21 @@ function getUnauthenticatedContext(): AuthContext {
     role: null,
     organizationId: null,
     status: "unauthenticated",
+  };
+}
+
+function getControlledAuthenticatedContext(
+  identity: AuthIdentity,
+  status: "unresolved" | "organization_selection_required",
+): AuthContext {
+  return {
+    authenticated: true,
+    userId: identity.userId,
+    email: identity.email ?? null,
+    userType: null,
+    role: null,
+    organizationId: null,
+    status,
   };
 }
 
@@ -97,18 +117,25 @@ export async function getAuthContext(client?: SupabaseServerClient): Promise<Aut
     return getUnauthenticatedContext();
   }
 
-  const base = getAuthenticatedBase(user);
-  const platformUsers = await getActivePlatformUsers(supabase, user.id);
+  return getAuthContextForIdentity(supabase, {
+    userId: user.id,
+    email: user.email ?? null,
+  });
+}
+
+export async function getAuthContextForIdentity(
+  supabase: SupabaseServerClient,
+  identity: AuthIdentity,
+): Promise<AuthContext> {
+  const base = getAuthenticatedBase({
+    id: identity.userId,
+    email: identity.email ?? null,
+  });
+  const platformUsers = await getActivePlatformUsers(supabase, identity.userId);
 
   if (platformUsers.length === 1) {
     if (!isPlatformRole(platformUsers[0].role)) {
-      return {
-        ...base,
-        userType: null,
-        role: null,
-        organizationId: null,
-        status: "unresolved",
-      };
+      return getControlledAuthenticatedContext(identity, "unresolved");
     }
 
     return {
@@ -121,36 +148,18 @@ export async function getAuthContext(client?: SupabaseServerClient): Promise<Aut
   }
 
   if (platformUsers.length > 1) {
-    return {
-      ...base,
-      userType: null,
-      role: null,
-      organizationId: null,
-      status: "unresolved",
-    };
+    return getControlledAuthenticatedContext(identity, "unresolved");
   }
 
-  const memberships = await getActiveMemberships(supabase, user.id);
+  const memberships = await getActiveMemberships(supabase, identity.userId);
 
   if (memberships.length === 0) {
-    return {
-      ...base,
-      userType: null,
-      role: null,
-      organizationId: null,
-      status: "unresolved",
-    };
+    return getControlledAuthenticatedContext(identity, "unresolved");
   }
 
   if (memberships.length === 1) {
     if (!isTenantRole(memberships[0].role)) {
-      return {
-        ...base,
-        userType: null,
-        role: null,
-        organizationId: null,
-        status: "unresolved",
-      };
+      return getControlledAuthenticatedContext(identity, "unresolved");
     }
 
     return {
@@ -162,11 +171,5 @@ export async function getAuthContext(client?: SupabaseServerClient): Promise<Aut
     };
   }
 
-  return {
-    ...base,
-    userType: null,
-    role: null,
-    organizationId: null,
-    status: "organization_selection_required",
-  };
+  return getControlledAuthenticatedContext(identity, "organization_selection_required");
 }
