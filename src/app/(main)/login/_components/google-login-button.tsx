@@ -12,9 +12,9 @@ export function GoogleLoginButton() {
   const [isPending, setIsPending] = useState(false);
 
   const handleClick = async () => {
-    try {
-      setIsPending(true);
+    setIsPending(true);
 
+    try {
       const supabase = createClient();
       const redirectTo = new URL("/auth/callback", window.location.origin).toString();
       const { error } = await supabase.auth.signInWithOAuth({
@@ -26,12 +26,12 @@ export function GoogleLoginButton() {
 
       if (error) {
         console.error("Supabase Google OAuth start error:", error.message);
+        setIsPending(false);
         window.location.assign("/login?error=oauth_callback_failed");
       }
     } catch {
-      window.location.assign("/login?error=oauth_callback_failed");
-    } finally {
       setIsPending(false);
+      window.location.assign("/login?error=oauth_callback_failed");
     }
   };
 
