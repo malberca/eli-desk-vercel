@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { AUTH_COOKIE_NAME } from "@/config/auth";
 import { getAuthContext } from "@/lib/auth/get-auth-context";
 import { getAuthDestination } from "@/lib/auth/get-auth-destination";
 
@@ -69,7 +70,14 @@ export async function logoutAction(): Promise<void> {
 
   if (error) {
     console.error("Supabase logout error:", error.message);
+    throw new Error("No se pudo cerrar la sesion.");
   }
+
+  const cookieStore = await cookies();
+  cookieStore.set(AUTH_COOKIE_NAME, "", {
+    path: "/",
+    maxAge: 0,
+  });
 
   redirect("/login");
 }

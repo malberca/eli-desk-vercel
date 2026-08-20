@@ -1,3 +1,5 @@
+import { logoutAction } from "@/server/server-actions";
+
 export default function PlatformPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background px-6 py-16">
@@ -8,6 +10,14 @@ export default function PlatformPage() {
           Tu cuenta fue identificada como usuario de plataforma. Este destino existe para validar el routing de Auth V2
           mientras se implementa la experiencia completa de ELI Platform Admin.
         </p>
+        <form action={logoutAction} className="pt-2">
+          <button
+            type="submit"
+            className="inline-flex items-center rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground text-sm shadow-xs transition-colors hover:bg-primary/90"
+          >
+            Cerrar sesión
+          </button>
+        </form>
       </div>
     </main>
   );
