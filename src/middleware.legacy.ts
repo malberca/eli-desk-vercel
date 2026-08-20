@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 import { AUTH_COOKIE_NAME } from "@/config/auth";
 
+// Rollback reference preserved for AUTH-09.
 export function middleware(request: NextRequest) {
   const session = request.cookies.get(AUTH_COOKIE_NAME)?.value;
   const { pathname } = request.nextUrl;
