@@ -3,11 +3,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import bcrypt from "bcryptjs";
-
-import { AUTH_COOKIE_NAME } from "@/config/auth";
-import { supabaseAdmin } from "@/lib/supabase-admin";
-
 export async function getValueFromCookie(key: string): Promise<string | undefined> {
   const cookieStore = await cookies();
   return cookieStore.get(key)?.value;
@@ -19,66 +14,65 @@ export async function setValueToCookie(
   options: { path?: string; maxAge?: number } = {},
 ): Promise<void> {
   const cookieStore = await cookies();
+
   cookieStore.set(key, value, {
     path: options.path ?? "/",
     maxAge: options.maxAge ?? 60 * 60 * 24 * 7,
   });
 }
 
-export async function getPreference<T extends string>(key: string, allowed: readonly T[], fallback: T): Promise<T> {
+export async function getPreference<T extends string>(
+  key: string,
+  allowed: readonly T[],
+  fallback: T,
+): Promise<T> {
   const cookieStore = await cookies();
   const cookie = cookieStore.get(key);
   const value = cookie ? cookie.value.trim() : undefined;
+
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
 
-export async function loginAction(_prev: { error?: string }, formData: FormData): Promise<{ error?: string }> {
+export async function loginAction(
+  _prev: { error?: string },
+  formData: FormData,
+): Promise<{ error?: string }> {
   const email = (formData.get("email") as string)?.trim().toLowerCase();
   const password = formData.get("password") as string;
 
   if (!email || !password) {
-    return { error: "Ingres\u00e1 correo y contrase\u00f1a." };
+    return { error: "Ingresá correo y contraseña." };
   }
 
-  const { data: user, error } = await supabaseAdmin
-    .from("admin_users")
-    .select("id, email, password_hash, name, avatar_url")
-    .eq("email", email)
-    .single();
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
 
-  if (error || !user) {
-    console.error("Login DB error:", error);
-    return { error: "Email o contrase\u00f1a incorrectos." };
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    console.error("Supabase login error:", error.message);
+
+    return {
+      error: "Email o contraseña incorrectos.",
+    };
   }
-
-  const match = await bcrypt.compare(password, user.password_hash);
-  if (!match) {
-    return { error: "Email o contrase\u00f1a incorrectos." };
-  }
-
-  const cookieStore = await cookies();
-  cookieStore.set(
-    AUTH_COOKIE_NAME,
-    JSON.stringify({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      avatar: user.avatar_url || "",
-    }),
-    {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-      httpOnly: false,
-      sameSite: "lax",
-    },
-  );
 
   redirect("/dashboard/default");
 }
 
 export async function logoutAction(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.delete(AUTH_COOKIE_NAME);
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    console.error("Supabase logout error:", error.message);
+  }
+
   redirect("/login");
 }
 
@@ -87,12 +81,25 @@ export async function getLoggedAdmin(): Promise<{
   email: string;
   name: string;
 } | null> {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get(AUTH_COOKIE_NAME)?.value;
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
     return null;
   }
+
+  return {
+    id: user.id,
+    email: user.email ?? "",
+    name:
+      user.user_metadata?.full_name ??
+      user.user_metadata?.name ??
+      user.email ??
+      "Usuario",
+  };
 }

@@ -17,7 +17,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { APP_CONFIG } from "@/config/app-config";
 import { AUTH_COOKIE_NAME } from "@/config/auth";
 import { rootUser, type User } from "@/data/users";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
@@ -110,9 +109,8 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link prefetch={false} href="/dashboard/default">
-                <Image src="/eli-logo.svg" alt="ELI" width={20} height={20} className="size-5 dark:hidden" />
-                <Image src="/eli-logow.svg" alt="ELI" width={20} height={20} className="hidden size-5 dark:block" />
-                <span className="font-semibold text-base">{APP_CONFIG.name}</span>
+                <Image src="/logo_eli.svg" alt="ELI" width={112} height={32} className="h-auto w-28 dark:hidden" />
+                <Image src="/logo_eli_w.svg" alt="ELI" width={112} height={32} className="hidden h-auto w-28 dark:block" />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

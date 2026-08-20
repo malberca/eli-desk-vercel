@@ -112,6 +112,27 @@ _Deploy your own copy with one click._
 
 Your app will be running at [http://localhost:3000](http://localhost:3000)
 
+## Supabase keepalive
+
+If your Supabase project is on a plan that pauses inactive projects, this repo includes `GET /api/keepalive/supabase`.
+
+Set:
+
+```bash
+SUPABASE_KEEPALIVE_SECRET=your-secret
+SUPABASE_KEEPALIVE_TABLE=admin_users
+```
+
+Then call it from your scheduler with:
+
+```bash
+curl -X GET \
+  "$APP_URL/api/keepalive/supabase" \
+  -H "Authorization: Bearer $SUPABASE_KEEPALIVE_SECRET"
+```
+
+See [docs/supabase-keepalive.md](docs/supabase-keepalive.md) for the full setup.
+
 ### Formatting and Linting
 
 Format, lint, and organize imports

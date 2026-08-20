@@ -13,11 +13,11 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
           {/* Top: Small logo + Tagline */}
           <div className="absolute top-10 z-10 space-y-3 px-10">
             <Image
-              src="/eli-logo_.svg"
+              src="/logo_eli_w.svg"
               alt="ELI"
-              width={48}
-              height={20}
-              className="brightness-0 invert opacity-90"
+              width={112}
+              height={32}
+              className="h-auto w-28 opacity-90"
             />
             <p className="max-w-xs text-sm font-light leading-relaxed text-primary-foreground/80">
               Tu asistente inteligente para la administración de consorcios. 

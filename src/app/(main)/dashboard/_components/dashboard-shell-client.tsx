@@ -2,11 +2,16 @@
 
 import * as React from "react";
 
+import Link from "next/link";
+import { BriefcaseBusiness, CalendarDays, ClipboardList, LayoutGrid } from "lucide-react";
+import { usePathname } from "next/navigation";
+
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
+import { AUTH_COOKIE_NAME } from "@/config/auth";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { rootUser, type User } from "@/data/users";
-import { AUTH_COOKIE_NAME } from "@/config/auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 import { AccountSwitcher } from "./sidebar/account-switcher";
@@ -22,6 +27,51 @@ type DashboardShellClientProps = {
   children: React.ReactNode;
 };
 
+const mobileNavItems = [
+  { label: "Inicio", href: "/dashboard/default", icon: LayoutGrid },
+  { label: "Reclamos", href: "/dashboard/coming-soon", icon: ClipboardList },
+  { label: "Operación", href: "/dashboard/coming-soon", icon: BriefcaseBusiness },
+  { label: "Agenda", href: "/dashboard/coming-soon", icon: CalendarDays },
+] as const;
+
+function MobileBottomNav({
+  users,
+  logoutAction,
+}: {
+  users: User[];
+  logoutAction: () => Promise<void>;
+}) {
+  const pathname = usePathname();
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden">
+      <div className="mx-auto flex max-w-md items-center justify-between rounded-[1.75rem] border border-border/60 bg-background/92 p-2 shadow-[0_18px_60px_-20px_rgba(15,23,42,0.4)] backdrop-blur-2xl">
+        {mobileNavItems.map(({ label, href, icon: Icon }) => {
+          const isActive = pathname === href;
+
+          return (
+            <Link
+              key={label}
+              href={href}
+              className={cn(
+                "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium text-muted-foreground transition-all",
+                isActive && "bg-primary text-primary-foreground shadow-[0_10px_30px_-14px_rgba(37,99,235,0.95)]",
+              )}
+            >
+              <Icon className="size-5" />
+              <span className="truncate">{label}</span>
+            </Link>
+          );
+        })}
+
+        <div className="flex flex-1 justify-center">
+          <AccountSwitcher users={users} logoutAction={logoutAction} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardShellClient({
   defaultOpen,
   variant,
@@ -30,39 +80,52 @@ export function DashboardShellClient({
   children,
 }: DashboardShellClientProps) {
   const [sessionUsers, setSessionUsers] = React.useState<User[]>([rootUser]);
+  const [mounted, setMounted] = React.useState(false);
+  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     try {
       const raw = document.cookie
         .split("; ")
-        .find((c) => c.startsWith(`${AUTH_COOKIE_NAME}=`))
+        .find((cookie) => cookie.startsWith(`${AUTH_COOKIE_NAME}=`))
         ?.split("=")
         .slice(1)
         .join("=");
+
       if (raw) {
         const data = JSON.parse(decodeURIComponent(raw));
-        setSessionUsers([{
-          id: data.id || "1",
-          name: data.name || "Admin",
-          email: data.email || "",
-          avatar: data.avatar || "",
-          role: "admin",
-        }]);
+        setSessionUsers([
+          {
+            id: data.id || "1",
+            name: data.name || "Admin",
+            email: data.email || "",
+            avatar: data.avatar || "",
+            role: "admin",
+          },
+        ]);
       }
-    } catch { /* cookie parse */ }
+    } catch {
+      /* cookie parse */
+    }
   }, []);
-  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Evita hidratación distinta: servidor y primer paint en cliente muestran solo el contenido.
-  // Tras montar, mostramos sidebar + header (Radix genera IDs solo en cliente).
   if (!mounted) {
     return (
       <div className="flex min-h-dvh flex-col">
         <div className={cn("h-full p-4 md:p-6")}>{children}</div>
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-dvh bg-[linear-gradient(180deg,#fffdf8_0%,#f7f8fc_58%,#f3f6fb_100%)]">
+        <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-5">{children}</main>
+        <MobileBottomNav users={sessionUsers} logoutAction={logoutAction} />
       </div>
     );
   }
@@ -92,7 +155,7 @@ export function DashboardShellClient({
               <LayoutControls />
               <ThemeSwitcher />
               <AccountSwitcher users={sessionUsers} logoutAction={logoutAction} />
-              </div>
+            </div>
           </div>
         </header>
         <div className="h-full p-4 md:p-6">{children}</div>
@@ -100,4 +163,3 @@ export function DashboardShellClient({
     </SidebarProvider>
   );
 }
-  

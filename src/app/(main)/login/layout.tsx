@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import { Separator } from "@/components/ui/separator";
-import { APP_CONFIG } from "@/config/app-config";
 
 export default function LoginLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
@@ -10,11 +9,10 @@ export default function LoginLayout({ children }: Readonly<{ children: ReactNode
         <div className="relative order-2 hidden h-full rounded-3xl bg-primary lg:flex">
           <div className="absolute top-10 space-y-4 px-10 text-primary-foreground">
             <img
-              src="/eli-gr.svg"
+              src="/logo_eli_w.svg"
               alt="ELI"
-              className="h-16 w-auto brightness-0 invert"
+              className="h-24 w-auto"
             />
-            <h1 className="font-medium text-2xl">{APP_CONFIG.loginName}</h1>
             <p className="text-sm opacity-90">Panel de control para administradores de edificios.</p>
           </div>
 
