@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import Image from "next/image";
 import Link from "next/link";
 
@@ -17,8 +15,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { AUTH_COOKIE_NAME } from "@/config/auth";
-import { rootUser, type User } from "@/data/users";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
@@ -63,9 +59,18 @@ const _data = {
 };
 
 export function AppSidebar({
+  currentUser,
   logoutAction,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { logoutAction: () => Promise<void> }) {
+}: React.ComponentProps<typeof Sidebar> & {
+  currentUser: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+  };
+  logoutAction: () => Promise<void>;
+}) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
     useShallow((s) => ({
       sidebarVariant: s.sidebarVariant,
@@ -73,31 +78,6 @@ export function AppSidebar({
       isSynced: s.isSynced,
     })),
   );
-
-  const [sessionUser, setSessionUser] = useState<User>(rootUser);
-
-  useEffect(() => {
-    try {
-      const raw = document.cookie
-        .split("; ")
-        .find((c) => c.startsWith(`${AUTH_COOKIE_NAME}=`))
-        ?.split("=")
-        .slice(1)
-        .join("=");
-      if (raw) {
-        const data = JSON.parse(decodeURIComponent(raw));
-        setSessionUser({
-          id: data.id || "1",
-          name: data.name || "Admin",
-          email: data.email || "",
-          avatar: data.avatar || "",
-          role: "admin",
-        });
-      }
-    } catch {
-      /* cookie parse error */
-    }
-  }, []);
 
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
@@ -110,7 +90,13 @@ export function AppSidebar({
             <SidebarMenuButton asChild>
               <Link prefetch={false} href="/dashboard/default">
                 <Image src="/logo_eli.svg" alt="ELI" width={112} height={32} className="h-auto w-28 dark:hidden" />
-                <Image src="/logo_eli_w.svg" alt="ELI" width={112} height={32} className="hidden h-auto w-28 dark:block" />
+                <Image
+                  src="/logo_eli_w.svg"
+                  alt="ELI"
+                  width={112}
+                  height={32}
+                  className="hidden h-auto w-28 dark:block"
+                />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -122,7 +108,7 @@ export function AppSidebar({
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sessionUser} logoutAction={logoutAction} />
+        <NavUser user={currentUser} logoutAction={logoutAction} />
       </SidebarFooter>
     </Sidebar>
   );

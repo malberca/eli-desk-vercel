@@ -3,14 +3,13 @@
 import * as React from "react";
 
 import Link from "next/link";
-import { BriefcaseBusiness, CalendarDays, ClipboardList, LayoutGrid } from "lucide-react";
 import { usePathname } from "next/navigation";
 
+import { BriefcaseBusiness, CalendarDays, ClipboardList, LayoutGrid } from "lucide-react";
+
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
-import { AUTH_COOKIE_NAME } from "@/config/auth";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { rootUser, type User } from "@/data/users";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -19,10 +18,18 @@ import { LayoutControls } from "./sidebar/layout-controls";
 import { SearchDialog } from "./sidebar/search-dialog";
 import { ThemeSwitcher } from "./sidebar/theme-switcher";
 
+type CurrentUser = {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+};
+
 type DashboardShellClientProps = {
   defaultOpen: boolean;
   variant: "inset" | "sidebar" | "floating";
   collapsible: "offcanvas" | "icon" | "none";
+  currentUser: CurrentUser;
   logoutAction: () => Promise<void>;
   children: React.ReactNode;
 };
@@ -35,10 +42,10 @@ const mobileNavItems = [
 ] as const;
 
 function MobileBottomNav({
-  users,
+  currentUser,
   logoutAction,
 }: {
-  users: User[];
+  currentUser: CurrentUser;
   logoutAction: () => Promise<void>;
 }) {
   const pathname = usePathname();
@@ -65,7 +72,7 @@ function MobileBottomNav({
         })}
 
         <div className="flex flex-1 justify-center">
-          <AccountSwitcher users={users} logoutAction={logoutAction} />
+          <AccountSwitcher user={currentUser} logoutAction={logoutAction} />
         </div>
       </div>
     </div>
@@ -76,38 +83,12 @@ export function DashboardShellClient({
   defaultOpen,
   variant,
   collapsible,
+  currentUser,
   logoutAction,
   children,
 }: DashboardShellClientProps) {
-  const [sessionUsers, setSessionUsers] = React.useState<User[]>([rootUser]);
   const [mounted, setMounted] = React.useState(false);
   const isMobile = useIsMobile();
-
-  React.useEffect(() => {
-    try {
-      const raw = document.cookie
-        .split("; ")
-        .find((cookie) => cookie.startsWith(`${AUTH_COOKIE_NAME}=`))
-        ?.split("=")
-        .slice(1)
-        .join("=");
-
-      if (raw) {
-        const data = JSON.parse(decodeURIComponent(raw));
-        setSessionUsers([
-          {
-            id: data.id || "1",
-            name: data.name || "Admin",
-            email: data.email || "",
-            avatar: data.avatar || "",
-            role: "admin",
-          },
-        ]);
-      }
-    } catch {
-      /* cookie parse */
-    }
-  }, []);
 
   React.useEffect(() => {
     setMounted(true);
@@ -125,14 +106,14 @@ export function DashboardShellClient({
     return (
       <div className="min-h-dvh bg-[linear-gradient(180deg,#fffdf8_0%,#f7f8fc_58%,#f3f6fb_100%)]">
         <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-5">{children}</main>
-        <MobileBottomNav users={sessionUsers} logoutAction={logoutAction} />
+        <MobileBottomNav currentUser={currentUser} logoutAction={logoutAction} />
       </div>
     );
   }
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar variant={variant} collapsible={collapsible} logoutAction={logoutAction} />
+      <AppSidebar currentUser={currentUser} variant={variant} collapsible={collapsible} logoutAction={logoutAction} />
       <SidebarInset
         className={cn(
           "[html[data-content-layout=centered]_&]:mx-auto! [html[data-content-layout=centered]_&]:max-w-screen-2xl!",
@@ -154,7 +135,7 @@ export function DashboardShellClient({
             <div className="flex items-center gap-2">
               <LayoutControls />
               <ThemeSwitcher />
-              <AccountSwitcher users={sessionUsers} logoutAction={logoutAction} />
+              <AccountSwitcher user={currentUser} logoutAction={logoutAction} />
             </div>
           </div>
         </header>
