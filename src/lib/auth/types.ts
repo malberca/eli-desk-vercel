@@ -2,6 +2,18 @@ export type PlatformRole = "PLATFORM_OWNER" | "PLATFORM_ADMIN" | "SUPPORT" | "PL
 
 export type TenantRole = "TENANT_OWNER" | "ADMIN" | "OPERATOR" | "VIEWER";
 
+export type UnresolvedReason =
+  | "unknown_internal_user"
+  | "platform_suspended"
+  | "platform_inactive"
+  | "membership_suspended"
+  | "membership_inactive"
+  | "membership_invited"
+  | "organization_suspended"
+  | "organization_cancelled"
+  | "organization_archived"
+  | "invalid_configuration";
+
 export type AuthContext =
   | {
       authenticated: false;
@@ -38,6 +50,7 @@ export type AuthContext =
       role: null;
       organizationId: null;
       status: "unresolved";
+      reason: UnresolvedReason;
     }
   | {
       authenticated: true;
