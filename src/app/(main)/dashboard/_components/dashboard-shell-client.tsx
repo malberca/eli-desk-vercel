@@ -5,14 +5,15 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { BriefcaseBusiness, CalendarDays, ClipboardList, LayoutGrid } from "lucide-react";
-
+import { ConsorcioContext } from "@/app/(main)/dashboard/_components/consorcio-context";
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { deskMobilePrimaryItems } from "@/navigation/sidebar/sidebar-items";
 
+import { MobileMoreMenu } from "./mobile-more-menu";
 import { AccountSwitcher } from "./sidebar/account-switcher";
 import { LayoutControls } from "./sidebar/layout-controls";
 import { SearchDialog } from "./sidebar/search-dialog";
@@ -34,46 +35,58 @@ type DashboardShellClientProps = {
   children: React.ReactNode;
 };
 
-const mobileNavItems = [
-  { label: "Inicio", href: "/dashboard/default", icon: LayoutGrid },
-  { label: "Reclamos", href: "/dashboard/coming-soon", icon: ClipboardList },
-  { label: "Operación", href: "/dashboard/coming-soon", icon: BriefcaseBusiness },
-  { label: "Agenda", href: "/dashboard/coming-soon", icon: CalendarDays },
-] as const;
+type DashboardUserContextValue = Pick<DashboardShellClientProps, "currentUser" | "logoutAction">;
 
-function MobileBottomNav({
-  currentUser,
-  logoutAction,
-}: {
-  currentUser: CurrentUser;
-  logoutAction: () => Promise<void>;
-}) {
+const DashboardUserContext = React.createContext<DashboardUserContextValue | null>(null);
+
+export function useDashboardUser() {
+  const context = React.useContext(DashboardUserContext);
+
+  if (!context) {
+    throw new Error("useDashboardUser must be used within DashboardShellClient.");
+  }
+
+  return context;
+}
+
+function MobileBottomNav() {
   const pathname = usePathname();
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden">
       <div className="mx-auto flex max-w-md items-center justify-between rounded-[1.75rem] border border-border/60 bg-background/92 p-2 shadow-[0_18px_60px_-20px_rgba(15,23,42,0.4)] backdrop-blur-2xl">
-        {mobileNavItems.map(({ label, href, icon: Icon }) => {
-          const isActive = pathname === href;
+        {deskMobilePrimaryItems.map((item) => {
+          const Icon = item.icon;
+          const href = item.href;
+          const isAvailable = item.availability === "available" && Boolean(href);
+          const isActive = isAvailable && pathname === item.href;
 
-          return (
+          return isAvailable && href ? (
             <Link
-              key={label}
+              key={item.id}
               href={href}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium text-muted-foreground transition-all",
+                "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 font-medium text-[11px] text-muted-foreground transition-all",
                 isActive && "bg-primary text-primary-foreground shadow-[0_10px_30px_-14px_rgba(37,99,235,0.95)]",
               )}
             >
               <Icon className="size-5" />
-              <span className="truncate">{label}</span>
+              <span className="truncate">{item.label}</span>
             </Link>
+          ) : (
+            <button
+              key={item.id}
+              type="button"
+              disabled
+              className="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 font-medium text-[11px] text-muted-foreground opacity-60"
+            >
+              <Icon className="size-5" />
+              <span className="truncate">{item.label}</span>
+              <span className="font-normal text-[9px] leading-none">No disponible</span>
+            </button>
           );
         })}
-
-        <div className="flex flex-1 justify-center">
-          <AccountSwitcher user={currentUser} logoutAction={logoutAction} />
-        </div>
+        <MobileMoreMenu />
       </div>
     </div>
   );
@@ -94,24 +107,19 @@ export function DashboardShellClient({
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return (
-      <div className="flex min-h-dvh flex-col">
-        <div className={cn("h-full p-4 md:p-6")}>{children}</div>
-      </div>
-    );
-  }
-
-  if (isMobile) {
-    return (
-      <div className="min-h-dvh bg-[linear-gradient(180deg,#fffdf8_0%,#f7f8fc_58%,#f3f6fb_100%)]">
-        <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28 pt-5">{children}</main>
-        <MobileBottomNav currentUser={currentUser} logoutAction={logoutAction} />
-      </div>
-    );
-  }
-
-  return (
+  const content = !mounted ? (
+    <div className="flex min-h-dvh flex-col">
+      <div className={cn("h-full p-4 md:p-6")}>{children}</div>
+    </div>
+  ) : isMobile ? (
+    <div className="min-h-dvh bg-[linear-gradient(180deg,#fffdf8_0%,#f7f8fc_58%,#f3f6fb_100%)]">
+      <header className="mx-auto max-w-md px-4 pt-5">
+        <ConsorcioContext />
+      </header>
+      <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pt-4 pb-28">{children}</main>
+      <MobileBottomNav />
+    </div>
+  ) : (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar currentUser={currentUser} variant={variant} collapsible={collapsible} logoutAction={logoutAction} />
       <SidebarInset
@@ -143,4 +151,6 @@ export function DashboardShellClient({
       </SidebarInset>
     </SidebarProvider>
   );
+
+  return <DashboardUserContext.Provider value={{ currentUser, logoutAction }}>{content}</DashboardUserContext.Provider>;
 }

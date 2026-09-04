@@ -1,28 +1,8 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import {
-  ChevronRight,
-  MailIcon,
-  PlusCircleIcon,
-  TicketPlus,
-  Building2,
-  Truck,
-  FileBarChart,
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -30,238 +10,68 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
-import type { NavGroup, NavMainItem } from "@/navigation/sidebar/sidebar-items";
-import { CreateTicketDialog } from "@/app/(main)/dashboard/_components/ticket-dialog";
+import type { DeskNavigationItem } from "@/navigation/sidebar/sidebar-items";
 
-interface NavMainProps {
-  readonly items: readonly NavGroup[];
-  readonly onTicketCreated?: () => void;
+function AvailabilityLabel({ item }: { item: DeskNavigationItem }) {
+  return (
+    <span className="ml-auto text-xs">{item.availability === "coming_soon" ? "Próximamente" : "No disponible"}</span>
+  );
 }
 
-const IsComingSoon = () => (
-  <span className="ml-auto rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">Soon</span>
-);
+function DeskNavItem({ item, pathname }: { item: DeskNavigationItem; pathname: string }) {
+  const Icon = item.icon;
+  const href = item.href;
+  const isAvailable = item.availability === "available" && Boolean(href);
+  const isActive = isAvailable && pathname === item.href;
 
-const NavItemExpanded = ({
-  item,
-  isActive,
-  isSubmenuOpen,
-}: {
-  item: NavMainItem;
-  isActive: (url: string, subItems?: NavMainItem["subItems"]) => boolean;
-  isSubmenuOpen: (subItems?: NavMainItem["subItems"]) => boolean;
-}) => {
   return (
-    <Collapsible key={item.title} asChild defaultOpen={isSubmenuOpen(item.subItems)} className="group/collapsible">
-      <SidebarMenuItem>
-        <CollapsibleTrigger asChild>
-          {item.subItems ? (
-            <SidebarMenuButton
-              disabled={item.comingSoon}
-              isActive={isActive(item.url, item.subItems)}
-              tooltip={item.title}
-            >
-              {item.icon && <item.icon />}
-              <span>{item.title}</span>
-              {item.comingSoon && <IsComingSoon />}
-              <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-            </SidebarMenuButton>
-          ) : (
-            <SidebarMenuButton
-              asChild
-              aria-disabled={item.comingSoon}
-              isActive={isActive(item.url)}
-              tooltip={item.title}
-            >
-              <Link prefetch={false} href={item.url} target={item.newTab ? "_blank" : undefined}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-                {item.comingSoon && <IsComingSoon />}
-              </Link>
-            </SidebarMenuButton>
-          )}
-        </CollapsibleTrigger>
-        {item.subItems && (
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {item.subItems.map((subItem) => (
-                <SidebarMenuSubItem key={subItem.title}>
-                  <SidebarMenuSubButton aria-disabled={subItem.comingSoon} isActive={isActive(subItem.url)} asChild>
-                    <Link prefetch={false} href={subItem.url} target={subItem.newTab ? "_blank" : undefined}>
-                      {subItem.icon && <subItem.icon />}
-                      <span>{subItem.title}</span>
-                      {subItem.comingSoon && <IsComingSoon />}
-                    </Link>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              ))}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        )}
-      </SidebarMenuItem>
-    </Collapsible>
-  );
-};
-
-const NavItemCollapsed = ({
-  item,
-  isActive,
-}: {
-  item: NavMainItem;
-  isActive: (url: string, subItems?: NavMainItem["subItems"]) => boolean;
-}) => {
-  return (
-    <SidebarMenuItem key={item.title}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuButton
-            disabled={item.comingSoon}
-            tooltip={item.title}
-            isActive={isActive(item.url, item.subItems)}
-          >
-            {item.icon && <item.icon />}
-            <span>{item.title}</span>
-            <ChevronRight />
-          </SidebarMenuButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-50 space-y-1" side="right" align="start">
-          {item.subItems?.map((subItem) => (
-            <DropdownMenuItem key={subItem.title} asChild>
-              <SidebarMenuSubButton
-                key={subItem.title}
-                asChild
-                className="focus-visible:ring-0"
-                aria-disabled={subItem.comingSoon}
-                isActive={isActive(subItem.url)}
-              >
-                <Link prefetch={false} href={subItem.url} target={subItem.newTab ? "_blank" : undefined}>
-                  {subItem.icon && <subItem.icon className="[&>svg]:text-sidebar-foreground" />}
-                  <span>{subItem.title}</span>
-                  {subItem.comingSoon && <IsComingSoon />}
-                </Link>
-              </SidebarMenuSubButton>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <SidebarMenuItem>
+      {isAvailable && href ? (
+        <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
+          <Link prefetch={false} href={href}>
+            <Icon />
+            <span>{item.label}</span>
+          </Link>
+        </SidebarMenuButton>
+      ) : (
+        <SidebarMenuButton disabled aria-disabled="true" tooltip={item.label}>
+          <Icon />
+          <span>{item.label}</span>
+          <AvailabilityLabel item={item} />
+        </SidebarMenuButton>
+      )}
     </SidebarMenuItem>
   );
-};
+}
 
-export function NavMain({ items, onTicketCreated }: NavMainProps) {
-  const path = usePathname();
-  const { state, isMobile } = useSidebar();
-  const [ticketDialogOpen, setTicketDialogOpen] = React.useState(false);
-
-  const isItemActive = (url: string, subItems?: NavMainItem["subItems"]) => {
-    if (subItems?.length) {
-      return subItems.some((sub) => path.startsWith(sub.url));
-    }
-    return path === url;
-  };
-
-  const isSubmenuOpen = (subItems?: NavMainItem["subItems"]) => {
-    return subItems?.some((sub) => path.startsWith(sub.url)) ?? false;
-  };
+export function NavMain({ items }: { readonly items: readonly DeskNavigationItem[] }) {
+  const pathname = usePathname();
+  const primaryItems = items.filter((item) => item.desktopSection === "primary");
+  const futureItems = items.filter((item) => item.desktopSection === "future");
 
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupContent className="flex flex-col gap-2">
+        <SidebarGroupLabel>ELI Desk</SidebarGroupLabel>
+        <SidebarGroupContent>
           <SidebarMenu>
-            <SidebarMenuItem className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton
-                    tooltip="Quick Create"
-                    className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
-                  >
-                    <PlusCircleIcon />
-                    <span>Quick Create</span>
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="start" className="w-52">
-                  <DropdownMenuItem onClick={() => setTicketDialogOpen(true)}>
-                    <TicketPlus className="mr-2 h-4 w-4" />
-                    Nuevo Ticket
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled className="opacity-50">
-                    <Building2 className="mr-2 h-4 w-4" />
-                    Nuevo Edificio
-                    <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem disabled className="opacity-50">
-                    <Truck className="mr-2 h-4 w-4" />
-                    Nuevo Proveedor
-                    <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem disabled className="opacity-50">
-                    <FileBarChart className="mr-2 h-4 w-4" />
-                    Nuevo Reporte
-                    <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                size="icon"
-                className="h-9 w-9 shrink-0 group-data-[collapsible=icon]:opacity-0"
-                variant="outline"
-              >
-                <MailIcon />
-                <span className="sr-only">Inbox</span>
-              </Button>
-            </SidebarMenuItem>
+            {primaryItems.map((item) => (
+              <DeskNavItem key={item.id} item={item} pathname={pathname} />
+            ))}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-
-      {items.map((group) => (
-        <SidebarGroup key={group.id}>
-          {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
-          <SidebarGroupContent className="flex flex-col gap-2">
-            <SidebarMenu>
-              {group.items.map((item) => {
-                if (state === "collapsed" && !isMobile) {
-                  if (!item.subItems) {
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          aria-disabled={item.comingSoon}
-                          tooltip={item.title}
-                          isActive={isItemActive(item.url)}
-                        >
-                          <Link prefetch={false} href={item.url} target={item.newTab ? "_blank" : undefined}>
-                            {item.icon && <item.icon />}
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  }
-                  return <NavItemCollapsed key={item.title} item={item} isActive={isItemActive} />;
-                }
-                return (
-                  <NavItemExpanded key={item.title} item={item} isActive={isItemActive} isSubmenuOpen={isSubmenuOpen} />
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      ))}
-
-      {/* Ticket creation modal */}
-      <CreateTicketDialog
-        open={ticketDialogOpen}
-        onOpenChange={setTicketDialogOpen}
-        onCreated={onTicketCreated}
-      />
+      <SidebarGroup>
+        <SidebarGroupLabel>Próximamente</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {futureItems.map((item) => (
+              <DeskNavItem key={item.id} item={item} pathname={pathname} />
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
     </>
   );
 }

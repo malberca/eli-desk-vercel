@@ -1,7 +1,6 @@
 "use client";
 
-import { BadgeCheck, Bell, CreditCard, LogOut } from "lucide-react";
-
+import { AccountActions } from "@/app/(main)/dashboard/_components/account-actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -25,14 +24,10 @@ export function AccountSwitcher({
   };
   readonly logoutAction: () => Promise<void>;
 }) {
-  const handleLogout = async () => {
-    await logoutAction();
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="size-9 rounded-lg cursor-pointer">
+        <Avatar className="size-9 cursor-pointer rounded-lg">
           <AvatarImage src={user.avatar || undefined} alt={user.name} />
           <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
         </Avatar>
@@ -50,27 +45,27 @@ export function AccountSwitcher({
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem disabled className="opacity-50">
-            <BadgeCheck />
-            Mi cuenta
-            <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem disabled className="opacity-50">
-            <CreditCard />
-            Facturación
-            <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem disabled className="opacity-50">
-            <Bell />
-            Notificaciones
-            <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-          </DropdownMenuItem>
+          <AccountActions
+            logoutAction={logoutAction}
+            renderAction={(action) => {
+              const Icon = action.icon;
+
+              return (
+                <DropdownMenuItem
+                  key={action.id}
+                  disabled={action.disabled}
+                  className={action.disabled ? "opacity-50" : "cursor-pointer"}
+                  onSelect={() => void action.onSelect?.()}
+                >
+                  <Icon />
+                  {action.label}
+                  {action.disabled && <span className="ml-auto text-muted-foreground text-xs">No disponible</span>}
+                </DropdownMenuItem>
+              );
+            }}
+          />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-          <LogOut />
-          Cerrar sesión
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleUser, CreditCard, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
+import { CircleUser, EllipsisVertical, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -75,16 +75,6 @@ export function NavUser({
               <DropdownMenuItem disabled className="opacity-50">
                 <CircleUser />
                 Mi cuenta
-                <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled className="opacity-50">
-                <CreditCard />
-                Facturación
-                <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled className="opacity-50">
-                <MessageSquareDot />
-                Notificaciones
                 <span className="ml-auto text-xs text-muted-foreground">Soon</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>

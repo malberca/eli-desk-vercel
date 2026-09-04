@@ -1,16 +1,10 @@
 "use client";
+
 import * as React from "react";
 
 import { useRouter } from "next/navigation";
 
-import {
-  ChartBar,
-  Forklift,
-  Gauge,
-  LayoutDashboard,
-  Search,
-  ShoppingBag,
-} from "lucide-react";
+import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,44 +16,37 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { type DeskNavigationItem, deskNavigationItems } from "@/navigation/sidebar/sidebar-items";
 
-type SearchItem = {
-  group: string;
-  label: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  href?: string;
-  disabled?: boolean;
-};
+const searchGroups = [
+  { id: "primary", label: "ELI Desk" },
+  { id: "future", label: "Próximamente" },
+] as const;
 
-const searchItems: SearchItem[] = [
-  { group: "ELI Desk", icon: LayoutDashboard, label: "Monitor", href: "/dashboard/default" },
+function AvailabilityLabel({ item }: { item: DeskNavigationItem }) {
+  if (item.availability === "available") return null;
 
-  { group: "ELI Desk", icon: ChartBar, label: "Reclamos", href: "/dashboard/reclamos", disabled: true },
-  { group: "ELI Desk", icon: Gauge, label: "Urgencias", href: "/dashboard/urgencias", disabled: true },
-
-  { group: "Operación", icon: Forklift, label: "Edificios", href: "/dashboard/edificios", disabled: true },
-  { group: "Operación", icon: ShoppingBag, label: "Proveedores", href: "/dashboard/proveedores", disabled: true },
-  { group: "Operación", icon: ChartBar, label: "Reportes", href: "/dashboard/reportes", disabled: true },
-  { group: "Operación", icon: ShoppingBag, label: "Finanzas", href: "/dashboard/finanzas", disabled: true },
-];
+  return (
+    <span className="ml-2 rounded-md bg-muted px-2 py-1 text-xs">
+      {item.availability === "coming_soon" ? "Próximamente" : "No disponible"}
+    </span>
+  );
+}
 
 export function SearchDialog() {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "j" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((prev) => !prev);
+    const down = (event: KeyboardEvent) => {
+      if (event.key === "j" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setOpen((previous) => !previous);
       }
     };
+
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, []);
-
-  const groups = React.useMemo(() => {
-    return Array.from(new Set(searchItems.map((item) => item.group)));
   }, []);
 
   return (
@@ -80,36 +67,38 @@ export function SearchDialog() {
         <CommandInput placeholder="Buscar módulos de ELI Desk…" />
         <CommandList>
           <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+          {searchGroups.map((group, index) => {
+            const items = deskNavigationItems.filter((item) => item.desktopSection === group.id);
 
-          {groups.map((group, i) => (
-            <React.Fragment key={group}>
-              {i !== 0 && <CommandSeparator />}
+            return (
+              <React.Fragment key={group.id}>
+                {index !== 0 && <CommandSeparator />}
+                <CommandGroup heading={group.label}>
+                  {items.map((item) => {
+                    const Icon = item.icon;
+                    const isAvailable = item.availability === "available" && Boolean(item.href);
 
-              <CommandGroup heading={group}>
-                {searchItems
-                  .filter((item) => item.group === group)
-                  .map((item) => (
-                    <CommandItem
-                      key={item.label}
-                      className={`!py-1.5 ${item.disabled ? "opacity-50 pointer-events-none" : ""}`}
-                      onSelect={() => {
-                        if (item.disabled) return;
-                        if (item.href) router.push(item.href);
-                        setOpen(false);
-                      }}
-                    >
-                      {item.icon && <item.icon />}
-                      <span className="flex-1">{item.label}</span>
-                      {item.disabled && (
-                        <span className="ml-2 rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">
-                          Próximamente
-                        </span>
-                      )}
-                    </CommandItem>
-                  ))}
-              </CommandGroup>
-            </React.Fragment>
-          ))}
+                    return (
+                      <CommandItem
+                        key={item.id}
+                        disabled={!isAvailable}
+                        className={!isAvailable ? "opacity-60" : undefined}
+                        onSelect={() => {
+                          if (!isAvailable || !item.href) return;
+                          router.push(item.href);
+                          setOpen(false);
+                        }}
+                      >
+                        <Icon />
+                        <span className="flex-1">{item.label}</span>
+                        <AvailabilityLabel item={item} />
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </React.Fragment>
+            );
+          })}
         </CommandList>
       </CommandDialog>
     </>

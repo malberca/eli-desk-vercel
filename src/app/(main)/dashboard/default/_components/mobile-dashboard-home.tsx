@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import Link from "next/link";
+
 import {
   ArrowDown,
   ArrowRight,
@@ -19,8 +20,8 @@ import {
   ExternalLink,
   FileText,
   GitMerge,
-  MessageSquareText,
   Megaphone,
+  MessageSquareText,
   MoreVertical,
   Pencil,
   Search,
@@ -30,10 +31,20 @@ import {
   Users,
 } from "lucide-react";
 
+import { AccountActions } from "@/app/(main)/dashboard/_components/account-actions";
+import { useDashboardUser } from "@/app/(main)/dashboard/_components/dashboard-shell-client";
 import { DeleteTicketDialog } from "@/app/(main)/dashboard/_components/delete-ticket-dialog";
 import { EditTicketDialog } from "@/app/(main)/dashboard/_components/edit-ticket-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useDashboardMetrics, useTickets, updateTicket, type TicketRow } from "@/hooks/use-eli-data";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { type TicketRow, updateTicket, useDashboardMetrics, useTickets } from "@/hooks/use-eli-data";
 import { cn } from "@/lib/utils";
 
 function formatRelativeTime(value: string) {
@@ -159,7 +170,13 @@ function MobileTicketActions({
   }
 
   const currentMenuTitle =
-    activeMenu === "estado" ? "Estado" : activeMenu === "prioridad" ? "Prioridad" : activeMenu === "tipo" ? "Tipo" : null;
+    activeMenu === "estado"
+      ? "Estado"
+      : activeMenu === "prioridad"
+        ? "Prioridad"
+        : activeMenu === "tipo"
+          ? "Tipo"
+          : null;
 
   return (
     <DropdownMenu
@@ -179,10 +196,18 @@ function MobileTicketActions({
           <MoreVertical className="size-4" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={8} className="w-[min(18rem,calc(100vw-2rem))] rounded-3xl p-0 shadow-2xl">
+      <DropdownMenuContent
+        align="end"
+        sideOffset={8}
+        className="w-[min(18rem,calc(100vw-2rem))] rounded-3xl p-0 shadow-2xl"
+      >
         <DropdownMenuLabel className="px-5 py-4 font-mono text-base text-slate-500">
           {currentMenuTitle ? (
-            <button type="button" onClick={() => setActiveMenu("root")} className="flex items-center gap-2 text-slate-500">
+            <button
+              type="button"
+              onClick={() => setActiveMenu("root")}
+              className="flex items-center gap-2 text-slate-500"
+            >
               <ChevronLeft className="size-4" />
               <span>{currentMenuTitle}</span>
             </button>
@@ -358,6 +383,56 @@ function MobileTicketActions({
   );
 }
 
+function MobileGreetingMenu() {
+  const { currentUser, logoutAction } = useDashboardUser();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="min-w-0 rounded-2xl border border-white/80 bg-white/85 px-4 py-3 text-left text-slate-700 shadow-sm"
+          aria-label="Abrir menú de usuario"
+        >
+          <span className="block truncate font-semibold text-sm">Hola, {currentUser.name} 👋</span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" sideOffset={8} className="min-w-52 rounded-2xl p-1">
+        <DropdownMenuGroup>
+          <AccountActions
+            includeSettings
+            logoutAction={logoutAction}
+            renderAction={(action) => {
+              const Icon = action.icon;
+              const menuItem = (
+                <DropdownMenuItem
+                  key={action.id}
+                  disabled={action.disabled}
+                  className={action.disabled ? "opacity-50" : "cursor-pointer"}
+                  onSelect={() => void action.onSelect?.()}
+                >
+                  <Icon />
+                  {action.label}
+                  {action.disabled && <span className="ml-auto text-muted-foreground text-xs">No disponible</span>}
+                </DropdownMenuItem>
+              );
+
+              return action.id === "logout" ? (
+                <React.Fragment key={action.id}>
+                  <DropdownMenuSeparator />
+                  {menuItem}
+                </React.Fragment>
+              ) : (
+                menuItem
+              );
+            }}
+          />
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function MobileDashboardHome() {
   const { metrics, loading: metricsLoading } = useDashboardMetrics();
   const { tickets, loading: ticketsLoading, refetch } = useTickets();
@@ -371,21 +446,24 @@ export function MobileDashboardHome() {
       <div className="space-y-6 md:hidden">
         <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/78 p-4 shadow-[0_25px_80px_-32px_rgba(15,23,42,0.35)] backdrop-blur-2xl">
           <div className="pointer-events-none absolute inset-x-6 top-0 h-24 rounded-full bg-blue-500/10 blur-3xl" />
-          <div className="flex items-center justify-end gap-2">
-            <button
-              type="button"
-              className="flex size-12 items-center justify-center rounded-2xl border border-white/80 bg-white/85 text-slate-700 shadow-sm"
-              aria-label="Notificaciones"
-            >
-              <Bell className="size-5" />
-            </button>
-            <button
-              type="button"
-              className="flex size-12 items-center justify-center rounded-2xl border border-white/80 bg-white/85 text-slate-700 shadow-sm"
-              aria-label="Mensajes"
-            >
-              <MessageSquareText className="size-5" />
-            </button>
+          <div className="flex items-center justify-between gap-2">
+            <MobileGreetingMenu />
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                className="flex size-12 items-center justify-center rounded-2xl border border-white/80 bg-white/85 text-slate-700 shadow-sm"
+                aria-label="Notificaciones"
+              >
+                <Bell className="size-5" />
+              </button>
+              <button
+                type="button"
+                className="flex size-12 items-center justify-center rounded-2xl border border-white/80 bg-white/85 text-slate-700 shadow-sm"
+                aria-label="Mensajes"
+              >
+                <MessageSquareText className="size-5" />
+              </button>
+            </div>
           </div>
 
           <div className="mt-6 flex items-center gap-3">
