@@ -1,36 +1,15 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { useChartData } from "@/hooks/use-eli-data"
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useChartData } from "@/hooks/use-eli-data";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const chartConfig = {
   date: { label: "Fecha" },
@@ -42,33 +21,35 @@ const chartConfig = {
     label: "Tickets cerrados",
     color: "hsl(0, 0%, 65%)",
   },
-} satisfies ChartConfig
+  enProceso: {
+    label: "Tickets en proceso",
+    color: "hsl(38, 92%, 50%)",
+  },
+} satisfies ChartConfig;
 
 export function ChartAreaInteractive() {
-  const isMobile = useIsMobile()
-  const [timeRange, setTimeRange] = React.useState("90d")
-  const { chartData, loading } = useChartData()
+  const isMobile = useIsMobile();
+  const [timeRange, setTimeRange] = React.useState("90d");
+  const { chartData, loading, error } = useChartData();
 
   React.useEffect(() => {
-    if (isMobile) setTimeRange("7d")
-  }, [isMobile])
+    if (isMobile) setTimeRange("7d");
+  }, [isMobile]);
 
   const filteredData = React.useMemo(() => {
-    if (!chartData.length) return []
-    const referenceDate = new Date(chartData[chartData.length - 1]!.date)
-    const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90
-    const start = new Date(referenceDate)
-    start.setDate(start.getDate() - days)
-    return chartData.filter((item) => new Date(item.date) >= start)
-  }, [chartData, timeRange])
+    if (!chartData.length) return [];
+    const referenceDate = new Date(chartData[chartData.length - 1]!.date);
+    const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+    const start = new Date(referenceDate);
+    start.setDate(start.getDate() - days);
+    return chartData.filter((item) => new Date(item.date) >= start);
+  }, [chartData, timeRange]);
 
   return (
     <Card className="@container/card">
       <CardHeader>
         <CardTitle>Tickets: creados por día</CardTitle>
-        <CardDescription>
-          Evolución de tickets abiertos (rojo) y cerrados (azul) en el período.
-        </CardDescription>
+        <CardDescription>Evolución de tickets abiertos, en proceso y cerrados en el período.</CardDescription>
         <CardAction>
           <ToggleGroup
             type="single"
@@ -90,9 +71,15 @@ export function ChartAreaInteractive() {
               <SelectValue placeholder="90 días" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
-              <SelectItem value="90d" className="rounded-lg">90 días</SelectItem>
-              <SelectItem value="30d" className="rounded-lg">30 días</SelectItem>
-              <SelectItem value="7d" className="rounded-lg">7 días</SelectItem>
+              <SelectItem value="90d" className="rounded-lg">
+                90 días
+              </SelectItem>
+              <SelectItem value="30d" className="rounded-lg">
+                30 días
+              </SelectItem>
+              <SelectItem value="7d" className="rounded-lg">
+                7 días
+              </SelectItem>
             </SelectContent>
           </Select>
         </CardAction>
@@ -101,6 +88,10 @@ export function ChartAreaInteractive() {
         {loading ? (
           <div className="flex h-62 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
+          </div>
+        ) : error ? (
+          <div className="flex h-62 items-center justify-center text-destructive">
+            No se pudo cargar la tendencia: {error}
           </div>
         ) : filteredData.length === 0 ? (
           <div className="flex h-62 items-center justify-center text-muted-foreground">
@@ -118,6 +109,10 @@ export function ChartAreaInteractive() {
                   <stop offset="5%" stopColor="var(--color-cerrados)" stopOpacity={0.8} />
                   <stop offset="95%" stopColor="var(--color-cerrados)" stopOpacity={0.1} />
                 </linearGradient>
+                <linearGradient id="fillEnProceso" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-enProceso)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--color-enProceso)" stopOpacity={0.1} />
+                </linearGradient>
               </defs>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -127,11 +122,11 @@ export function ChartAreaInteractive() {
                 tickMargin={8}
                 minTickGap={32}
                 tickFormatter={(value) => {
-                  const date = new Date(value)
+                  const date = new Date(value);
                   return date.toLocaleDateString("es-AR", {
                     month: "short",
                     day: "numeric",
-                  })
+                  });
                 }}
               />
               <ChartTooltip
@@ -150,22 +145,13 @@ export function ChartAreaInteractive() {
                   />
                 }
               />
-              <Area
-                dataKey="cerrados"
-                type="natural"
-                fill="url(#fillCerrados)"
-                stroke="var(--color-cerrados)"
-              />
-              <Area
-                dataKey="abiertos"
-                type="natural"
-                fill="url(#fillAbiertos)"
-                stroke="var(--color-abiertos)"
-              />
+              <Area dataKey="enProceso" type="natural" fill="url(#fillEnProceso)" stroke="var(--color-enProceso)" />
+              <Area dataKey="cerrados" type="natural" fill="url(#fillCerrados)" stroke="var(--color-cerrados)" />
+              <Area dataKey="abiertos" type="natural" fill="url(#fillAbiertos)" stroke="var(--color-abiertos)" />
             </AreaChart>
           </ChartContainer>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

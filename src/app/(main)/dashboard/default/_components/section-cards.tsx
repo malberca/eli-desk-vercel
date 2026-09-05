@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Building2, AlertTriangle, Ticket, Clock } from "lucide-react"
+import { AlertTriangle, Building2, Ticket } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useDashboardMetrics } from "@/hooks/use-eli-data"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDashboardMetrics } from "@/hooks/use-eli-data";
 
 function MetricCard({
   title,
@@ -12,23 +12,23 @@ function MetricCard({
   loading,
   variant = "default",
 }: {
-  title: string
-  value: string | number
-  icon: React.ComponentType<{ className?: string }>
-  loading: boolean
-  variant?: "default" | "warning" | "danger"
+  title: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  loading: boolean;
+  variant?: "default" | "warning" | "danger";
 }) {
   const variantStyles = {
     default: "border-border",
     warning: "border-amber-500/50 bg-amber-500/5 dark:bg-amber-500/10",
     danger: "border-destructive/50 bg-destructive/5 dark:bg-destructive/10",
-  }
+  };
 
   const iconStyles = {
     default: "text-muted-foreground",
     warning: "text-amber-500",
     danger: "text-destructive",
-  }
+  };
 
   return (
     <Card className={variantStyles[variant]}>
@@ -44,20 +44,19 @@ function MetricCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export function SectionCards() {
-  const { metrics, loading } = useDashboardMetrics()
+  const { metrics, loading, error } = useDashboardMetrics();
+
+  if (error) {
+    return <p className="text-destructive text-sm">No se pudieron cargar los indicadores: {error}</p>;
+  }
 
   return (
     <div className="grid grid-cols-2 gap-3 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-      <MetricCard
-        title="Edificios activos"
-        value={metrics.edificios}
-        icon={Building2}
-        loading={loading}
-      />
+      <MetricCard title="Edificios activos" value={metrics.edificios} icon={Building2} loading={loading} />
       <MetricCard
         title="Tickets pendientes"
         value={metrics.ticketsPendientes}
@@ -72,12 +71,6 @@ export function SectionCards() {
         loading={loading}
         variant={metrics.ticketsUrgentes > 0 ? "danger" : "default"}
       />
-      <MetricCard
-        title="Tiempo promedio resolución"
-        value={metrics.tiempoPromedioResolucion}
-        icon={Clock}
-        loading={loading}
-      />
     </div>
-  )
+  );
 }
