@@ -15,6 +15,8 @@ import {
   Users,
 } from "lucide-react";
 
+import type { FeatureId } from "@/features/catalog/feature-catalog";
+
 export interface NavSubItem {
   title: string;
   url: string;
@@ -46,6 +48,7 @@ export type DeskDesktopSection = "primary" | "future";
 
 export interface DeskNavigationItem {
   id: string;
+  featureId?: FeatureId;
   label: string;
   icon: LucideIcon;
   availability: DeskModuleAvailability;
@@ -68,6 +71,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "tickets",
+    featureId: "tickets",
     label: "Tickets",
     icon: Ticket,
     availability: "unavailable",
@@ -76,6 +80,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "consorcios",
+    featureId: "consorcios",
     label: "Consorcios",
     icon: Building2,
     availability: "unavailable",
@@ -84,6 +89,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "residentes",
+    featureId: "residentes",
     label: "Residentes",
     icon: Users,
     availability: "unavailable",
@@ -92,6 +98,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "documentos",
+    featureId: "documentos",
     label: "Documentos",
     icon: FileText,
     availability: "unavailable",
@@ -100,6 +107,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "notificaciones",
+    featureId: "notificaciones",
     label: "Notificaciones",
     icon: Bell,
     availability: "unavailable",
@@ -108,6 +116,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "reservas",
+    featureId: "reservas",
     label: "Reservas",
     icon: CalendarDays,
     availability: "unavailable",
@@ -116,6 +125,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "equipo",
+    featureId: "equipo",
     label: "Equipo",
     icon: Users,
     availability: "unavailable",
@@ -124,6 +134,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "seguridad",
+    featureId: "seguridad",
     label: "Seguridad",
     icon: ShieldCheck,
     availability: "unavailable",
@@ -132,6 +143,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "configuracion",
+    featureId: "tenant_settings",
     label: "Configuración",
     icon: Settings,
     availability: "unavailable",
@@ -140,6 +152,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "soporte",
+    featureId: "tenant_support",
     label: "Soporte",
     icon: CircleHelp,
     availability: "unavailable",
@@ -148,6 +161,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "reporting",
+    featureId: "reporting",
     label: "Reporting",
     icon: BarChart3,
     availability: "coming_soon",
@@ -156,6 +170,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "contable",
+    featureId: "contable",
     label: "Contable",
     icon: Calculator,
     availability: "coming_soon",
@@ -164,6 +179,7 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
   },
   {
     id: "legales",
+    featureId: "legales",
     label: "Legales",
     icon: Scale,
     availability: "coming_soon",

@@ -1,11 +1,14 @@
 import { Building2, Headset, LayoutDashboard, type LucideIcon, Rocket, Settings, Users } from "lucide-react";
 
+import type { FeatureId } from "@/features/catalog/feature-catalog";
+
 export type PlatformItemAvailability = "available" | "unavailable";
 export type PlatformItemPlacement = "mobile_primary" | "mobile_more" | "desktop";
 export type PlatformDesktopSection = "primary" | "administration";
 
 export type PlatformNavigationItem = {
   id: string;
+  featureId?: FeatureId;
   label: string;
   icon: LucideIcon;
   availability: PlatformItemAvailability;
@@ -28,6 +31,7 @@ export const platformNavigationItems: readonly PlatformNavigationItem[] = [
   },
   {
     id: "organizations",
+    featureId: "organizations",
     label: "Organizations",
     icon: Building2,
     availability: "unavailable",
@@ -36,6 +40,7 @@ export const platformNavigationItems: readonly PlatformNavigationItem[] = [
   },
   {
     id: "users",
+    featureId: "users",
     label: "Users",
     icon: Users,
     availability: "unavailable",
@@ -44,6 +49,7 @@ export const platformNavigationItems: readonly PlatformNavigationItem[] = [
   },
   {
     id: "support",
+    featureId: "platform_support",
     label: "Support",
     icon: Headset,
     availability: "unavailable",
@@ -52,6 +58,7 @@ export const platformNavigationItems: readonly PlatformNavigationItem[] = [
   },
   {
     id: "onboarding",
+    featureId: "onboarding",
     label: "Onboarding",
     icon: Rocket,
     availability: "unavailable",
@@ -60,6 +67,7 @@ export const platformNavigationItems: readonly PlatformNavigationItem[] = [
   },
   {
     id: "planes",
+    featureId: "planes",
     label: "Planes",
     icon: Settings,
     availability: "unavailable",
@@ -68,6 +76,7 @@ export const platformNavigationItems: readonly PlatformNavigationItem[] = [
   },
   {
     id: "suscripciones",
+    featureId: "suscripciones",
     label: "Suscripciones",
     icon: Settings,
     availability: "unavailable",
@@ -76,6 +85,7 @@ export const platformNavigationItems: readonly PlatformNavigationItem[] = [
   },
   {
     id: "sistema",
+    featureId: "platform_system",
     label: "Sistema",
     icon: Settings,
     availability: "unavailable",
