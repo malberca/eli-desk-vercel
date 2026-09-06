@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Building2, Ticket } from "lucide-react";
+import { AlertTriangle, Building2, Clock3, Ticket } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboardMetrics } from "@/hooks/use-eli-data";
@@ -70,6 +70,13 @@ export function SectionCards() {
         icon={AlertTriangle}
         loading={loading}
         variant={metrics.ticketsUrgentes > 0 ? "danger" : "default"}
+      />
+      <MetricCard
+        title="Sin movimiento +48h"
+        value={metrics.staleTickets48h}
+        icon={Clock3}
+        loading={loading}
+        variant={metrics.staleTickets48h > 0 ? "warning" : "default"}
       />
     </div>
   );

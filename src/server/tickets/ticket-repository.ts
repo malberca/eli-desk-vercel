@@ -95,7 +95,8 @@ export async function listEdificios(supabase: DbClient) {
 }
 
 export async function getDashboardSummary(supabase: DbClient) {
-  const [edificios, abiertos, urgencias] = await Promise.all([
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  const [edificios, abiertos, urgencias, staleTickets] = await Promise.all([
     supabase.from("edificios").select("id", { count: "exact", head: true }),
     supabase
       .from("tickets")
@@ -108,16 +109,24 @@ export async function getDashboardSummary(supabase: DbClient) {
       .is("deleted_at", null)
       .eq("status", "abierto")
       .eq("ticket_type", "urgencia"),
+    supabase
+      .from("tickets")
+      .select("id", { count: "exact", head: true })
+      .is("deleted_at", null)
+      .in("status", ["abierto", "en_proceso"])
+      .lt("updated_at", cutoff),
   ]);
 
   if (edificios.error) throwDatabaseError(edificios.error);
   if (abiertos.error) throwDatabaseError(abiertos.error);
   if (urgencias.error) throwDatabaseError(urgencias.error);
+  if (staleTickets.error) throwDatabaseError(staleTickets.error);
 
   return {
     edificios: edificios.count ?? 0,
     ticketsPendientes: abiertos.count ?? 0,
     ticketsUrgentes: urgencias.count ?? 0,
+    staleTickets48h: staleTickets.count ?? 0,
   };
 }
 

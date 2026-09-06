@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { Building2, ClipboardList, FileText, MessageSquareText, TriangleAlert } from "lucide-react";
+import { Building2, ClipboardList, Clock3, FileText, MessageSquareText, TriangleAlert } from "lucide-react";
 
 import { AccountActions } from "@/app/(main)/dashboard/_components/account-actions";
 import { useDashboardUser } from "@/app/(main)/dashboard/_components/dashboard-shell-client";
@@ -146,6 +146,13 @@ export function MobileDashboardHome() {
               value={metrics.ticketsUrgentes}
               detail={metrics.ticketsUrgentes > 0 ? "atención inmediata" : "sin incidentes críticos"}
               icon={TriangleAlert}
+              loading={metricsLoading}
+            />
+            <SummaryCard
+              title="Sin movimiento +48h"
+              value={metrics.staleTickets48h}
+              detail={metrics.staleTickets48h > 0 ? "requieren seguimiento" : "sin tickets estancados"}
+              icon={Clock3}
               loading={metricsLoading}
             />
           </div>

@@ -18,6 +18,7 @@ export interface DashboardMetrics {
   edificios: number;
   ticketsPendientes: number;
   ticketsUrgentes: number;
+  staleTickets48h: number;
   tiempoPromedioResolucion: string;
 }
 
@@ -76,6 +77,7 @@ export function useDashboardMetrics() {
     edificios: 0,
     ticketsPendientes: 0,
     ticketsUrgentes: 0,
+    staleTickets48h: 0,
     tiempoPromedioResolucion: "—",
   });
   const [loading, setLoading] = useState(true);
