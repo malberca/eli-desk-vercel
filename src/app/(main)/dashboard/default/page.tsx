@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { ClipboardList, FileText, MessageSquareText, TriangleAlert } from "lucide-react";
 
+import { useDeskFeatureAccess } from "@/app/(main)/dashboard/_components/desk-access-context";
 import { type TicketRow, useTickets } from "@/hooks/use-eli-data";
 import { cn } from "@/lib/utils";
 
@@ -97,6 +98,7 @@ function DesktopRecentActivity() {
 
 export default function Page() {
   const [hydrated, setHydrated] = React.useState(false);
+  const ticketsAccess = useDeskFeatureAccess("tickets");
 
   React.useEffect(() => {
     setHydrated(true);
@@ -104,6 +106,21 @@ export default function Page() {
 
   if (!hydrated) {
     return <div className="h-24 animate-pulse rounded-[2rem] bg-muted/60" />;
+  }
+
+  if (ticketsAccess?.state !== "resolved") {
+    return (
+      <section className="flex min-h-[40vh] items-center justify-center rounded-3xl border border-border/60 bg-muted/20 p-8 text-center">
+        <div className="max-w-md space-y-2">
+          <h1 className="font-semibold text-xl">
+            {ticketsAccess?.state === "coming_soon" ? "Próximamente" : "Sin acceso"}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            No se puede mostrar el resumen operativo con el acceso actual.
+          </p>
+        </div>
+      </section>
+    );
   }
 
   if (window.innerWidth < 768) {

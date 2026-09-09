@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { DashboardShellClient } from "@/app/(main)/dashboard/_components/dashboard-shell-client";
 import { SIDEBAR_COLLAPSIBLE_VALUES, SIDEBAR_VARIANT_VALUES } from "@/lib/preferences/layout";
 import { createClient } from "@/lib/supabase/server";
+import { resolveDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 import { getPreference, logoutAction } from "@/server/server-actions";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
@@ -18,6 +19,11 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
     getPreference("sidebar_variant", SIDEBAR_VARIANT_VALUES, "inset"),
     getPreference("sidebar_collapsible", SIDEBAR_COLLAPSIBLE_VALUES, "icon"),
   ]);
+  const deskAccess = (await resolveDeskFeatureAccess()).map(({ featureId, lifecycle, state }) => ({
+    featureId,
+    lifecycle,
+    state,
+  }));
   const email = user?.email ?? "";
   const fullName = typeof user?.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim() : "";
   const name = typeof user?.user_metadata?.name === "string" ? user.user_metadata.name.trim() : "";
@@ -37,6 +43,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
       collapsible={collapsible}
       currentUser={currentUser}
       logoutAction={logoutAction}
+      deskAccess={deskAccess}
     >
       {children}
     </DashboardShellClient>

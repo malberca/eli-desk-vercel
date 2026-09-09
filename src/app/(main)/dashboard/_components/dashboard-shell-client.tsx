@@ -6,12 +6,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { ConsorcioContext } from "@/app/(main)/dashboard/_components/consorcio-context";
+import { DeskAccessProvider, useDeskNavigationState } from "@/app/(main)/dashboard/_components/desk-access-context";
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { deskMobilePrimaryItems } from "@/navigation/sidebar/sidebar-items";
+import type { DeskFeatureAccessPresentation } from "@/server/access/resolve-desk-feature-access";
 
 import { MobileMoreMenu } from "./mobile-more-menu";
 import { AccountSwitcher } from "./sidebar/account-switcher";
@@ -33,6 +35,7 @@ type DashboardShellClientProps = {
   currentUser: CurrentUser;
   logoutAction: () => Promise<void>;
   children: React.ReactNode;
+  deskAccess: readonly DeskFeatureAccessPresentation[];
 };
 
 type DashboardUserContextValue = Pick<DashboardShellClientProps, "currentUser" | "logoutAction">;
@@ -49,43 +52,49 @@ export function useDashboardUser() {
   return context;
 }
 
+function MobileBottomNavItem({ item, pathname }: { item: (typeof deskMobilePrimaryItems)[number]; pathname: string }) {
+  const Icon = item.icon;
+  const href = item.href;
+  const state = useDeskNavigationState(item.featureId);
+  if (state === "denied" || state === "unavailable" || state === "error") return null;
+  const isAvailable = state === "resolved" && Boolean(href);
+  const isActive = isAvailable && pathname === item.href;
+
+  return isAvailable && href ? (
+    <Link
+      key={item.id}
+      href={href}
+      className={cn(
+        "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 font-medium text-[11px] text-muted-foreground transition-all",
+        isActive && "bg-primary text-primary-foreground shadow-[0_10px_30px_-14px_rgba(37,99,235,0.95)]",
+      )}
+    >
+      <Icon className="size-5" />
+      <span className="truncate">{item.label}</span>
+    </Link>
+  ) : (
+    <button
+      key={item.id}
+      type="button"
+      disabled
+      className="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 font-medium text-[11px] text-muted-foreground opacity-60"
+    >
+      <Icon className="size-5" />
+      <span className="truncate">{item.label}</span>
+      <span className="font-normal text-[9px] leading-none">No disponible</span>
+    </button>
+  );
+}
+
 function MobileBottomNav() {
   const pathname = usePathname();
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden">
       <div className="mx-auto flex max-w-md items-center justify-between rounded-[1.75rem] border border-border/60 bg-background/92 p-2 shadow-[0_18px_60px_-20px_rgba(15,23,42,0.4)] backdrop-blur-2xl">
-        {deskMobilePrimaryItems.map((item) => {
-          const Icon = item.icon;
-          const href = item.href;
-          const isAvailable = item.availability === "available" && Boolean(href);
-          const isActive = isAvailable && pathname === item.href;
-
-          return isAvailable && href ? (
-            <Link
-              key={item.id}
-              href={href}
-              className={cn(
-                "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 font-medium text-[11px] text-muted-foreground transition-all",
-                isActive && "bg-primary text-primary-foreground shadow-[0_10px_30px_-14px_rgba(37,99,235,0.95)]",
-              )}
-            >
-              <Icon className="size-5" />
-              <span className="truncate">{item.label}</span>
-            </Link>
-          ) : (
-            <button
-              key={item.id}
-              type="button"
-              disabled
-              className="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 font-medium text-[11px] text-muted-foreground opacity-60"
-            >
-              <Icon className="size-5" />
-              <span className="truncate">{item.label}</span>
-              <span className="font-normal text-[9px] leading-none">No disponible</span>
-            </button>
-          );
-        })}
+        {deskMobilePrimaryItems.map((item) => (
+          <MobileBottomNavItem key={item.id} item={item} pathname={pathname} />
+        ))}
         <MobileMoreMenu />
       </div>
     </div>
@@ -98,6 +107,7 @@ export function DashboardShellClient({
   collapsible,
   currentUser,
   logoutAction,
+  deskAccess,
   children,
 }: DashboardShellClientProps) {
   const [mounted, setMounted] = React.useState(false);
@@ -152,5 +162,9 @@ export function DashboardShellClient({
     </SidebarProvider>
   );
 
-  return <DashboardUserContext.Provider value={{ currentUser, logoutAction }}>{content}</DashboardUserContext.Provider>;
+  return (
+    <DeskAccessProvider value={deskAccess}>
+      <DashboardUserContext.Provider value={{ currentUser, logoutAction }}>{content}</DashboardUserContext.Provider>
+    </DeskAccessProvider>
+  );
 }

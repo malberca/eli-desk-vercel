@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { Search } from "lucide-react";
 
+import { useDeskNavigationState } from "@/app/(main)/dashboard/_components/desk-access-context";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
@@ -23,13 +24,34 @@ const searchGroups = [
   { id: "future", label: "Próximamente" },
 ] as const;
 
-function AvailabilityLabel({ item }: { item: DeskNavigationItem }) {
-  if (item.availability === "available") return null;
+function AvailabilityLabel({ state }: { state: "resolved" | "coming_soon" | "unavailable" }) {
+  if (state === "resolved") return null;
 
   return (
     <span className="ml-2 rounded-md bg-muted px-2 py-1 text-xs">
-      {item.availability === "coming_soon" ? "Próximamente" : "No disponible"}
+      {state === "coming_soon" ? "Próximamente" : "No disponible"}
     </span>
+  );
+}
+
+function SearchNavigationItem({ item, onSelect }: { item: DeskNavigationItem; onSelect: (href: string) => void }) {
+  const Icon = item.icon;
+  const state = useDeskNavigationState(item.featureId);
+  if (state === "denied" || state === "unavailable" || state === "error") return null;
+  const isAvailable = state === "resolved" && Boolean(item.href);
+
+  return (
+    <CommandItem
+      disabled={!isAvailable}
+      className={!isAvailable ? "opacity-60" : undefined}
+      onSelect={() => {
+        if (isAvailable && item.href) onSelect(item.href);
+      }}
+    >
+      <Icon />
+      <span className="flex-1">{item.label}</span>
+      <AvailabilityLabel state={state} />
+    </CommandItem>
   );
 }
 
@@ -74,27 +96,16 @@ export function SearchDialog() {
               <React.Fragment key={group.id}>
                 {index !== 0 && <CommandSeparator />}
                 <CommandGroup heading={group.label}>
-                  {items.map((item) => {
-                    const Icon = item.icon;
-                    const isAvailable = item.availability === "available" && Boolean(item.href);
-
-                    return (
-                      <CommandItem
-                        key={item.id}
-                        disabled={!isAvailable}
-                        className={!isAvailable ? "opacity-60" : undefined}
-                        onSelect={() => {
-                          if (!isAvailable || !item.href) return;
-                          router.push(item.href);
-                          setOpen(false);
-                        }}
-                      >
-                        <Icon />
-                        <span className="flex-1">{item.label}</span>
-                        <AvailabilityLabel item={item} />
-                      </CommandItem>
-                    );
-                  })}
+                  {items.map((item) => (
+                    <SearchNavigationItem
+                      key={item.id}
+                      item={item}
+                      onSelect={(href) => {
+                        router.push(href);
+                        setOpen(false);
+                      }}
+                    />
+                  ))}
                 </CommandGroup>
               </React.Fragment>
             );

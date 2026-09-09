@@ -2,6 +2,7 @@
 
 import { getAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
+import { getResolvedDeskTicketScope, isEmptyDeskTicketScope } from "@/server/access/resolve-desk-ticket-scope";
 
 import {
   closeTicket as closeTicketRepository,
@@ -38,21 +39,35 @@ async function withTenant<T>(
 }
 
 export async function listTickets(): Promise<ActionResult<TicketRecord[]>> {
-  return withTenant("No se pudieron cargar los tickets.", (supabase) => listTicketsRepository(supabase));
+  return withTenant("No se pudieron cargar los tickets.", async (supabase) => {
+    const scope = await getResolvedDeskTicketScope();
+    return scope === null || isEmptyDeskTicketScope(scope) ? [] : listTicketsRepository(supabase, scope);
+  });
 }
 
 export async function listTicketEdificios(): Promise<ActionResult<{ id: string; nombre: string }[]>> {
-  return withTenant("No se pudieron cargar los consorcios.", (supabase) => listEdificios(supabase));
+  return withTenant("No se pudieron cargar los consorcios.", async (supabase) => {
+    const scope = await getResolvedDeskTicketScope();
+    return scope === null || isEmptyDeskTicketScope(scope) ? [] : listEdificios(supabase, scope);
+  });
 }
 
 export async function getDashboardTicketSummary(): Promise<
   ActionResult<Awaited<ReturnType<typeof getDashboardSummary>>>
 > {
-  return withTenant("No se pudieron cargar los indicadores.", (supabase) => getDashboardSummary(supabase));
+  return withTenant("No se pudieron cargar los indicadores.", async (supabase) => {
+    const scope = await getResolvedDeskTicketScope();
+    return scope === null || isEmptyDeskTicketScope(scope)
+      ? getDashboardSummary(supabase, { kind: "explicit", consorcioIds: [] })
+      : getDashboardSummary(supabase, scope);
+  });
 }
 
 export async function getDashboardTicketTrend(): Promise<ActionResult<Awaited<ReturnType<typeof getTicketTrend>>>> {
-  return withTenant("No se pudo cargar la tendencia.", (supabase) => getTicketTrend(supabase));
+  return withTenant("No se pudo cargar la tendencia.", async (supabase) => {
+    const scope = await getResolvedDeskTicketScope();
+    return scope === null || isEmptyDeskTicketScope(scope) ? [] : getTicketTrend(supabase, scope);
+  });
 }
 
 export async function createTicket(input: Record<string, unknown>): Promise<ActionResult<TicketRecord>> {

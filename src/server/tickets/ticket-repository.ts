@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import type { DeskTicketScope } from "@/server/access/resolve-desk-ticket-scope";
+
 import { randomInt } from "node:crypto";
 
 export const TICKET_STATUSES = ["abierto", "en_proceso", "cerrado"] as const;
@@ -77,44 +79,63 @@ function isTicketCodeConflict(error: DatabaseError) {
   return context.includes("ticket_code");
 }
 
-export async function listTickets(supabase: DbClient): Promise<TicketRecord[]> {
-  const { data, error } = await supabase
+export async function listTickets(supabase: DbClient, scope: DeskTicketScope): Promise<TicketRecord[]> {
+  if (scope.kind === "explicit" && scope.consorcioIds.length === 0) return [];
+  let query = supabase
     .from("tickets")
     .select(TICKET_SELECT)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
+  if (scope.kind === "explicit") query = query.in("edificio_id", scope.consorcioIds);
 
+  const { data, error } = await query;
   if (error) throwDatabaseError(error);
   return ((data ?? []) as Record<string, unknown>[]).map(normalizeTicket);
 }
 
-export async function listEdificios(supabase: DbClient) {
-  const { data, error } = await supabase.from("edificios").select("id, nombre").order("nombre");
+export async function listEdificios(supabase: DbClient, scope: DeskTicketScope) {
+  if (scope.kind === "explicit" && scope.consorcioIds.length === 0) return [];
+  let query = supabase.from("edificios").select("id, nombre").order("nombre");
+  if (scope.kind === "explicit") query = query.in("id", scope.consorcioIds);
+  const { data, error } = await query;
   if (error) throwDatabaseError(error);
   return (data ?? []) as { id: string; nombre: string }[];
 }
 
-export async function getDashboardSummary(supabase: DbClient) {
+export async function getDashboardSummary(supabase: DbClient, scope: DeskTicketScope) {
+  if (scope.kind === "explicit" && scope.consorcioIds.length === 0) {
+    return { edificios: 0, ticketsPendientes: 0, ticketsUrgentes: 0, staleTickets48h: 0 };
+  }
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-  const [edificios, abiertos, urgencias, staleTickets] = await Promise.all([
-    supabase.from("edificios").select("id", { count: "exact", head: true }),
-    supabase
+  let edificiosQuery = supabase.from("edificios").select("id", { count: "exact", head: true });
+  let abiertosQuery = supabase
       .from("tickets")
       .select("id", { count: "exact", head: true })
       .is("deleted_at", null)
       .eq("status", "abierto"),
-    supabase
+    urgenciasQuery = supabase
       .from("tickets")
       .select("id", { count: "exact", head: true })
       .is("deleted_at", null)
       .eq("status", "abierto")
       .eq("ticket_type", "urgencia"),
-    supabase
+    staleTicketsQuery = supabase
       .from("tickets")
       .select("id", { count: "exact", head: true })
       .is("deleted_at", null)
       .in("status", ["abierto", "en_proceso"])
-      .lt("updated_at", cutoff),
+      .lt("updated_at", cutoff);
+  if (scope.kind === "explicit") {
+    edificiosQuery = edificiosQuery.in("id", scope.consorcioIds);
+    abiertosQuery = abiertosQuery.in("edificio_id", scope.consorcioIds);
+    urgenciasQuery = urgenciasQuery.in("edificio_id", scope.consorcioIds);
+    staleTicketsQuery = staleTicketsQuery.in("edificio_id", scope.consorcioIds);
+  }
+  const [edificios, abiertos, urgencias, staleTickets] = await Promise.all([
+    edificiosQuery,
+    abiertosQuery,
+    urgenciasQuery,
+    staleTicketsQuery,
   ]);
 
   if (edificios.error) throwDatabaseError(edificios.error);
@@ -130,12 +151,15 @@ export async function getDashboardSummary(supabase: DbClient) {
   };
 }
 
-export async function getTicketTrend(supabase: DbClient) {
-  const { data, error } = await supabase
+export async function getTicketTrend(supabase: DbClient, scope: DeskTicketScope) {
+  if (scope.kind === "explicit" && scope.consorcioIds.length === 0) return [];
+  let query = supabase
     .from("tickets")
     .select("status, created_at, updated_at")
     .is("deleted_at", null)
     .order("created_at", { ascending: true });
+  if (scope.kind === "explicit") query = query.in("edificio_id", scope.consorcioIds);
+  const { data, error } = await query;
   if (error) throwDatabaseError(error);
   return (data ?? []) as { status: string; created_at: string | null; updated_at: string | null }[];
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { useDeskNavigationState } from "@/app/(main)/dashboard/_components/desk-access-context";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -13,16 +14,16 @@ import {
 } from "@/components/ui/sidebar";
 import type { DeskNavigationItem } from "@/navigation/sidebar/sidebar-items";
 
-function AvailabilityLabel({ item }: { item: DeskNavigationItem }) {
-  return (
-    <span className="ml-auto text-xs">{item.availability === "coming_soon" ? "Próximamente" : "No disponible"}</span>
-  );
+function AvailabilityLabel({ state }: { state: "resolved" | "coming_soon" | "unavailable" }) {
+  return <span className="ml-auto text-xs">{state === "coming_soon" ? "Próximamente" : "No disponible"}</span>;
 }
 
 function DeskNavItem({ item, pathname }: { item: DeskNavigationItem; pathname: string }) {
   const Icon = item.icon;
   const href = item.href;
-  const isAvailable = item.availability === "available" && Boolean(href);
+  const state = useDeskNavigationState(item.featureId);
+  if (state === "denied" || state === "unavailable" || state === "error") return null;
+  const isAvailable = state === "resolved" && Boolean(href);
   const isActive = isAvailable && pathname === item.href;
 
   return (
@@ -38,7 +39,7 @@ function DeskNavItem({ item, pathname }: { item: DeskNavigationItem; pathname: s
         <SidebarMenuButton disabled aria-disabled="true" tooltip={item.label}>
           <Icon />
           <span>{item.label}</span>
-          <AvailabilityLabel item={item} />
+          <AvailabilityLabel state={state} />
         </SidebarMenuButton>
       )}
     </SidebarMenuItem>

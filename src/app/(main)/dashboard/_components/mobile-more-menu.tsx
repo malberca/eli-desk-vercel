@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { Ellipsis } from "lucide-react";
 
+import { useDeskNavigationState } from "@/app/(main)/dashboard/_components/desk-access-context";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -20,22 +21,22 @@ import {
   deskMobileMoreItems,
 } from "@/navigation/sidebar/sidebar-items";
 
-function AvailabilityLabel({ item }: { item: DeskNavigationItem }) {
+function AvailabilityLabel({ state }: { state: "resolved" | "coming_soon" | "unavailable" }) {
   return (
-    <span className="text-muted-foreground text-xs">
-      {item.availability === "coming_soon" ? "Próximamente" : "No disponible"}
-    </span>
+    <span className="text-muted-foreground text-xs">{state === "coming_soon" ? "Próximamente" : "No disponible"}</span>
   );
 }
 
 function MoreModuleItem({ item }: { item: DeskNavigationItem }) {
   const Icon = item.icon;
+  const state = useDeskNavigationState(item.featureId);
+  if (state === "denied" || state === "unavailable" || state === "error") return null;
 
   return (
     <Button disabled variant="ghost" className="h-12 w-full justify-start gap-3 px-3 text-left opacity-70">
       <Icon aria-hidden="true" className="size-5" />
       <span className="flex-1">{item.label}</span>
-      <AvailabilityLabel item={item} />
+      <AvailabilityLabel state={state} />
     </Button>
   );
 }
