@@ -1,0 +1,92 @@
+import type {
+  BotContext,
+  BotIdentityCandidate,
+  BotIdentityInput,
+  BotIdentityRepository,
+  BotIdentityResolution,
+} from "../../lib/bot-identity/identity-types";
+import { BotIdentityInputError } from "./identity-errors";
+
+const TELEGRAM_SENDER_ID = /^[^\s]{1,256}$/;
+
+function isTenantMismatch(candidate: BotIdentityCandidate): boolean {
+  if (candidate.residentOrganizationId !== null && candidate.residentOrganizationId !== candidate.organizationId) {
+    return true;
+  }
+  return candidate.links.some(
+    (link) =>
+      link.organizationId !== candidate.organizationId ||
+      link.unitOrganizationId !== candidate.organizationId ||
+      link.consorcioOrganizationId !== candidate.organizationId ||
+      link.consorcioId === null ||
+      link.unitOrganizationId === null,
+  );
+}
+
+function hasInactiveRelation(candidate: BotIdentityCandidate): boolean {
+  return candidate.organizationStatus !== "active" || candidate.residentActive === false;
+}
+
+function resolvedContexts(candidates: BotIdentityCandidate[]): BotContext[] {
+  return candidates.flatMap((candidate) =>
+    candidate.links.flatMap((link) =>
+      candidate.residentId && link.consorcioId
+        ? [
+            {
+              channel: "telegram" as const,
+              channelUserId: candidate.channelUserId,
+              organizationId: candidate.organizationId,
+              residentId: candidate.residentId,
+              unitId: link.unitId,
+              consorcioId: link.consorcioId,
+            },
+          ]
+        : [],
+    ),
+  );
+}
+
+function withoutDuplicateContexts(contexts: BotContext[]): BotContext[] {
+  const seen = new Set<string>();
+  return contexts.filter((context) => {
+    const key = [
+      context.channelUserId,
+      context.organizationId,
+      context.residentId,
+      context.unitId,
+      context.consorcioId,
+    ].join(":");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export async function resolveBotContext(
+  input: BotIdentityInput,
+  repository: BotIdentityRepository,
+): Promise<BotIdentityResolution> {
+  if (input.channel !== "telegram" || !TELEGRAM_SENDER_ID.test(input.externalSenderId)) {
+    throw new BotIdentityInputError();
+  }
+
+  const candidates = await repository.findTelegramCandidates(input.externalSenderId);
+  if (candidates.some((candidate) => candidate.channelUserStatus === "blocked")) {
+    return { outcome: "blocked", context: null };
+  }
+  if (candidates.length === 0) return { outcome: "unresolved", context: null };
+  if (candidates.some((candidate) => isTenantMismatch(candidate))) {
+    return { outcome: "cross_tenant", context: null };
+  }
+  if (candidates.some((candidate) => candidate.channelUserStatus === "inactive" || hasInactiveRelation(candidate))) {
+    return { outcome: "inactive", context: null };
+  }
+
+  const contexts = withoutDuplicateContexts(resolvedContexts(candidates));
+  if (contexts.length === 0) return { outcome: "unresolved", context: null };
+
+  const organizationIds = new Set(contexts.map((context) => context.organizationId));
+  if (organizationIds.size > 1) return { outcome: "ambiguous_organization", context: null };
+  if (contexts.length > 1) return { outcome: "ambiguous_unit", context: null };
+  return { outcome: "resolved", context: contexts[0] };
+}
