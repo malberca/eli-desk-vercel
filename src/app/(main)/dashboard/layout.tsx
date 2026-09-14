@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 
 import { DashboardShellClient } from "@/app/(main)/dashboard/_components/dashboard-shell-client";
+import { getAuthContext } from "@/lib/auth/get-auth-context";
 import { SIDEBAR_COLLAPSIBLE_VALUES, SIDEBAR_VARIANT_VALUES } from "@/lib/preferences/layout";
 import { createClient } from "@/lib/supabase/server";
 import { resolveDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
@@ -19,6 +20,11 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
     getPreference("sidebar_variant", SIDEBAR_VARIANT_VALUES, "inset"),
     getPreference("sidebar_collapsible", SIDEBAR_COLLAPSIBLE_VALUES, "icon"),
   ]);
+  const authContext = await getAuthContext(supabase);
+
+  const organizationId =
+    authContext.status === "resolved" && authContext.userType === "tenant" ? authContext.organizationId : null;
+
   const deskAccess = (await resolveDeskFeatureAccess()).map(({ featureId, lifecycle, state }) => ({
     featureId,
     lifecycle,
@@ -44,6 +50,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
       currentUser={currentUser}
       logoutAction={logoutAction}
       deskAccess={deskAccess}
+      organizationId={organizationId}
     >
       {children}
     </DashboardShellClient>

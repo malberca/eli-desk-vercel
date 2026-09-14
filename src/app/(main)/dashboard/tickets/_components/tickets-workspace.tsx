@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { subscribeTicketRslEvent } from "@/lib/realtime/ticket-rsl-events";
 import {
   changeTicketStatus,
   closeTicket,
@@ -87,6 +88,8 @@ export function TicketsWorkspace() {
   const [closeReason, setCloseReason] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   const [actionError, setActionError] = React.useState<string | null>(null);
+  const [newTicketIds, setNewTicketIds] = React.useState<Set<string>>(() => new Set());
+  const newTicketTimers = React.useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -102,6 +105,64 @@ export function TicketsWorkspace() {
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  const refreshTickets = React.useCallback(async () => {
+    const ticketResult = await listTickets();
+
+    if (!ticketResult.success) {
+      setError(ticketResult.error);
+      return;
+    }
+
+    setTickets(ticketResult.data);
+    setError(null);
+  }, []);
+
+  React.useEffect(() => {
+    return subscribeTicketRslEvent((event) => {
+      if (event.type === "ticket.created") {
+        setNewTicketIds((current) => {
+          const next = new Set(current);
+          next.add(event.ticketId);
+          return next;
+        });
+
+        const previousTimer = newTicketTimers.current.get(event.ticketId);
+
+        if (previousTimer) {
+          clearTimeout(previousTimer);
+        }
+
+        const timer = setTimeout(() => {
+          setNewTicketIds((current) => {
+            if (!current.has(event.ticketId)) return current;
+
+            const next = new Set(current);
+            next.delete(event.ticketId);
+            return next;
+          });
+
+          newTicketTimers.current.delete(event.ticketId);
+        }, 30_000);
+
+        newTicketTimers.current.set(event.ticketId, timer);
+      }
+
+      void refreshTickets();
+    });
+  }, [refreshTickets]);
+
+  React.useEffect(() => {
+    const timers = newTicketTimers.current;
+
+    return () => {
+      for (const timer of timers.values()) {
+        clearTimeout(timer);
+      }
+
+      timers.clear();
+    };
+  }, []);
 
   const filtered = React.useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -234,6 +295,18 @@ export function TicketsWorkspace() {
 
   return (
     <div className="space-y-6">
+      <style>{`
+        @keyframes eli-ticket-arrival {
+          0% {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.99);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="font-medium text-muted-foreground text-sm">Operación diaria</p>
@@ -326,27 +399,73 @@ export function TicketsWorkspace() {
             </div>
           ) : (
             <div className="space-y-2">
-              {filtered.map((ticket) => (
-                <button
-                  key={ticket.id}
-                  type="button"
-                  onClick={() => setSelected(ticket)}
-                  className="grid w-full gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 md:grid-cols-[minmax(0,1fr)_180px_110px_110px] md:items-center"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold">{ticket.ticket_code}</p>
-                    <p className="truncate text-muted-foreground text-sm">{ticket.description || "Sin descripción"}</p>
-                    <p className="mt-1 text-muted-foreground text-xs">{ticket.edificio_nombre || "Sin consorcio"}</p>
-                  </div>
-                  <span className="text-muted-foreground text-sm">
-                    {TYPE_LABELS[ticket.ticket_type as TicketType] ?? ticket.ticket_type}
-                  </span>
-                  <span className="text-sm capitalize">{ticket.priority}</span>
-                  <Badge variant="outline" className={`w-fit ${statusClass(ticket.status)}`}>
-                    {STATUS_LABELS[ticket.status as keyof typeof STATUS_LABELS] ?? ticket.status}
-                  </Badge>
-                </button>
-              ))}
+              {filtered.map((ticket) => {
+                const isNew = newTicketIds.has(ticket.id);
+
+                return (
+                  <button
+                    key={ticket.id}
+                    type="button"
+                    onClick={() => {
+                      setSelected(ticket);
+
+                      if (isNew) {
+                        setNewTicketIds((current) => {
+                          const next = new Set(current);
+                          next.delete(ticket.id);
+                          return next;
+                        });
+
+                        const timer = newTicketTimers.current.get(ticket.id);
+
+                        if (timer) {
+                          clearTimeout(timer);
+                        }
+
+                        newTicketTimers.current.delete(ticket.id);
+                      }
+                    }}
+                    style={
+                      isNew
+                        ? {
+                            animation: "eli-ticket-arrival 600ms cubic-bezier(0.16, 1, 0.3, 1)",
+                          }
+                        : undefined
+                    }
+                    className={`grid w-full gap-3 rounded-lg border p-4 text-left transition-[background-color,border-color,box-shadow] duration-300 hover:bg-muted/50 md:grid-cols-[minmax(0,1fr)_180px_110px_110px] md:items-center ${
+                      isNew
+                        ? "border-blue-500/35 bg-blue-50/80 shadow-[0_12px_30px_-24px_rgba(0,113,227,0.8)] dark:border-blue-400/30 dark:bg-blue-500/10"
+                        : ""
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold">{ticket.ticket_code}</p>
+
+                        {isNew && (
+                          <Badge className="border-transparent bg-[#0071E3] text-white dark:bg-[#0A84FF]">NUEVO</Badge>
+                        )}
+                      </div>
+
+                      <p className="truncate text-muted-foreground text-sm">
+                        {ticket.description || "Sin descripción"}
+                      </p>
+
+                      <p className="mt-1 text-muted-foreground text-xs">{ticket.edificio_nombre || "Sin consorcio"}</p>
+                    </div>
+
+                    <span className="text-muted-foreground text-sm">
+                      {TYPE_LABELS[ticket.ticket_type as TicketType] ?? ticket.ticket_type}
+                    </span>
+
+                    <span className="text-sm capitalize">{ticket.priority}</span>
+
+                    <Badge variant="outline" className={`w-fit ${statusClass(ticket.status)}`}>
+                      {STATUS_LABELS[ticket.status as keyof typeof STATUS_LABELS] ?? ticket.status}
+                    </Badge>
+                  </button>
+                );
+              })}
             </div>
           )}
         </CardContent>

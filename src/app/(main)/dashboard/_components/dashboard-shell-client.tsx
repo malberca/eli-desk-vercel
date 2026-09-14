@@ -20,6 +20,7 @@ import { AccountSwitcher } from "./sidebar/account-switcher";
 import { LayoutControls } from "./sidebar/layout-controls";
 import { SearchDialog } from "./sidebar/search-dialog";
 import { ThemeSwitcher } from "./sidebar/theme-switcher";
+import { TicketRslProvider } from "./ticket-rsl-provider";
 
 type CurrentUser = {
   id: string;
@@ -36,6 +37,7 @@ type DashboardShellClientProps = {
   logoutAction: () => Promise<void>;
   children: React.ReactNode;
   deskAccess: readonly DeskFeatureAccessPresentation[];
+  organizationId: string | null;
 };
 
 type DashboardUserContextValue = Pick<DashboardShellClientProps, "currentUser" | "logoutAction">;
@@ -108,6 +110,7 @@ export function DashboardShellClient({
   currentUser,
   logoutAction,
   deskAccess,
+  organizationId,
   children,
 }: DashboardShellClientProps) {
   const [mounted, setMounted] = React.useState(false);
@@ -164,7 +167,9 @@ export function DashboardShellClient({
 
   return (
     <DeskAccessProvider value={deskAccess}>
-      <DashboardUserContext.Provider value={{ currentUser, logoutAction }}>{content}</DashboardUserContext.Provider>
+      <DashboardUserContext.Provider value={{ currentUser, logoutAction }}>
+        <TicketRslProvider organizationId={organizationId}>{content}</TicketRslProvider>
+      </DashboardUserContext.Provider>
     </DeskAccessProvider>
   );
 }

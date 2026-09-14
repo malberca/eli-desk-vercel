@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { subscribeTicketRslEvent } from "@/lib/realtime/ticket-rsl-events";
 import {
   changeTicketStatus,
   closeTicket,
@@ -83,9 +84,9 @@ export function useDashboardMetrics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMetrics = useCallback(async () => {
+  const fetchMetrics = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
 
       const result = await getDashboardTicketSummary();
@@ -103,7 +104,13 @@ export function useDashboardMetrics() {
   }, []);
 
   useEffect(() => {
-    fetchMetrics();
+    void fetchMetrics();
+  }, [fetchMetrics]);
+
+  useEffect(() => {
+    return subscribeTicketRslEvent(() => {
+      void fetchMetrics(true);
+    });
   }, [fetchMetrics]);
 
   return { metrics, loading, error, refetch: fetchMetrics };
@@ -134,9 +141,9 @@ export function useTickets() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTickets = useCallback(async () => {
+  const fetchTickets = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
 
       const result = await listTicketsAction();
@@ -167,7 +174,13 @@ export function useTickets() {
   }, []);
 
   useEffect(() => {
-    fetchTickets();
+    void fetchTickets();
+  }, [fetchTickets]);
+
+  useEffect(() => {
+    return subscribeTicketRslEvent(() => {
+      void fetchTickets(true);
+    });
   }, [fetchTickets]);
 
   return { tickets, loading, error, refetch: fetchTickets };
