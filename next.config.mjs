@@ -2,7 +2,13 @@
 const nextConfig = {
   reactCompiler: true,
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? { exclude: ["error", "warn"] }
+        : false,
+  },
+  turbopack: {
+    root: process.cwd(),
   },
   async redirects() {
     return [

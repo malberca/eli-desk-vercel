@@ -3,6 +3,7 @@
 import { getAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getResolvedDeskTicketScope, isEmptyDeskTicketScope } from "@/server/access/resolve-desk-ticket-scope";
+import { executeAuthoritativeTicketClose } from "./ticket-close-command";
 
 import {
   closeTicket as closeTicketRepository,
@@ -110,7 +111,13 @@ export async function closeTicket(id: string, reason: unknown): Promise<ActionRe
   try {
     const closedReason = validateCloseReason(reason);
     return withTenant("No se pudo cerrar el ticket.", (supabase, organizationId) =>
-      closeTicketRepository(supabase, organizationId, id, closedReason),
+      executeAuthoritativeTicketClose(
+        { id, closedReason },
+        {
+          closeTicket: (ticketId, reason) =>
+            closeTicketRepository(supabase, organizationId, ticketId, reason),
+        },
+      ),
     );
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "El motivo de cierre no es válido." };

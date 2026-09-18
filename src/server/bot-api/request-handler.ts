@@ -21,6 +21,8 @@ import { type RawBodyError, readBoundedRawBody } from "./raw-body";
 
 type Verify = (input: VerifySignedRequestInput) => Promise<AuthenticatedTechnicalPrincipal>;
 
+export const BOT_HMAC_DOMAIN = "ELI-N8N-BOT-API-V1";
+
 export type BotApiHandlerDependencies = {
   environment: BotSecurityEnvironment;
   keyRegistry: BotKeyRegistry;
@@ -56,6 +58,7 @@ export async function handleBotApiRequest(
   let principal: AuthenticatedTechnicalPrincipal;
   try {
     principal = await verify({
+      domain: BOT_HMAC_DOMAIN,
       method: request.method,
       path,
       rawBody,

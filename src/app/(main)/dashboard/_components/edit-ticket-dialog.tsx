@@ -153,23 +153,6 @@ export function EditTicketDialog({ ticket, open, onOpenChange, onUpdated }: Edit
 
     onOpenChange(false)
 
-    // Notify vecino via Telegram when closing a chatbot ticket
-    if (isClosing && ticket.data && (ticket.data as any).source !== "dashboard") {
-      try {
-        fetch("https://n8n.ma-no.work/webhook/eli-ticket-closed", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: (ticket as any).chat_id || "",
-            ticket_code: ticket.ticket_code,
-            closed_reason: closedReason.trim(),
-            closed_by: closedBy,
-            description: ticket.description || "",
-          }),
-        }).catch(() => {})
-      } catch {}
-    }
-
     onUpdated?.()
   }
 

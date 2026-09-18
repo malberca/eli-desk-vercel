@@ -257,6 +257,7 @@ export async function updateTicketStatus(
     .update({ status })
     .eq("id", id)
     .eq("organization_id", organizationId)
+    .neq("status", "cerrado")
     .select(TICKET_SELECT)
     .single();
 
@@ -278,6 +279,7 @@ export async function closeTicket(
     })
     .eq("id", id)
     .eq("organization_id", organizationId)
+    .in("status", ["abierto", "en_proceso"])
     .select(TICKET_SELECT)
     .single();
 
