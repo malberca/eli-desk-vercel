@@ -92,6 +92,7 @@ function validateCompletion(value: unknown): McvCompletionInput | null {
   if (!isRecord(value) || value.apiVersion !== MCV_API_VERSION || value.capability !== MCV_COMPLETE_CAPABILITY) {
     return null;
   }
+
   if (
     !validUuid(value.deliveryId) ||
     typeof value.leaseToken !== "string" ||
@@ -99,11 +100,15 @@ function validateCompletion(value: unknown): McvCompletionInput | null {
   ) {
     return null;
   }
-  if (value.providerMessageId !== null) return null;
+
   if (value.outcome === "accepted") {
-    if (!exactKeys(value, ["apiVersion", "capability", "deliveryId", "leaseToken", "outcome", "providerMessageId"])) {
+    if (
+      !exactKeys(value, ["apiVersion", "capability", "deliveryId", "leaseToken", "outcome", "providerMessageId"]) ||
+      value.providerMessageId !== null
+    ) {
       return null;
     }
+
     return {
       deliveryId: value.deliveryId,
       leaseToken: value.leaseToken,
@@ -112,7 +117,37 @@ function validateCompletion(value: unknown): McvCompletionInput | null {
       errorCode: null,
     };
   }
-  const errors = ["claim_payload_invalid", "accept_processing_failed", "eli_response_invalid"];
+
+  if (value.outcome === "sent") {
+    if (
+      !exactKeys(value, ["apiVersion", "capability", "deliveryId", "leaseToken", "outcome", "providerMessageId"]) ||
+      typeof value.providerMessageId !== "string"
+    ) {
+      return null;
+    }
+
+    const providerMessageId = value.providerMessageId.trim();
+
+    if (providerMessageId.length === 0 || providerMessageId.length > 512) {
+      return null;
+    }
+
+    return {
+      deliveryId: value.deliveryId,
+      leaseToken: value.leaseToken,
+      outcome: "sent",
+      providerMessageId,
+      errorCode: null,
+    };
+  }
+
+  const errors = [
+    "claim_payload_invalid",
+    "accept_processing_failed",
+    "eli_response_invalid",
+    "provider_send_failed",
+  ];
+
   if (
     value.outcome !== "retryable_failure" ||
     !exactKeys(value, [
@@ -124,11 +159,13 @@ function validateCompletion(value: unknown): McvCompletionInput | null {
       "providerMessageId",
       "errorCode",
     ]) ||
+    value.providerMessageId !== null ||
     typeof value.errorCode !== "string" ||
     !errors.includes(value.errorCode)
   ) {
     return null;
   }
+
   return {
     deliveryId: value.deliveryId,
     leaseToken: value.leaseToken,

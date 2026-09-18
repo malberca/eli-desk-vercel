@@ -23,9 +23,14 @@ export type McvClaim = {
 export type McvCompletionInput = {
   deliveryId: string;
   leaseToken: string;
-  outcome: "accepted" | "retryable_failure";
-  providerMessageId: null;
-  errorCode: "claim_payload_invalid" | "accept_processing_failed" | "eli_response_invalid" | null;
+  outcome: "accepted" | "sent" | "retryable_failure";
+  providerMessageId: string | null;
+  errorCode:
+    | "claim_payload_invalid"
+    | "accept_processing_failed"
+    | "eli_response_invalid"
+    | "provider_send_failed"
+    | null;
 };
 
 export type McvCompletionResult = {

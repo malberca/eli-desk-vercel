@@ -179,6 +179,77 @@ test("complete accepts a current lease", async () => {
   });
 });
 
+test("complete accepts sent with provider message id", async () => {
+  const repository = new FakeRepository();
+  repository.completionResult = {
+    ...repository.completionResult,
+    deliveryStatus: "sent",
+    providerMessageId: "provider-message-123",
+  };
+
+  const response = await handleMcvCompleteRequest(
+    request("complete", completeBody({
+      outcome: "sent",
+      providerMessageId: "provider-message-123",
+    })),
+    dependencies(repository),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(repository.completeCalls, 1);
+  assert.deepEqual(await response.json(), {
+    accepted: true,
+    deliveryId: DELIVERY_ID,
+    status: "sent",
+    providerMessageId: "provider-message-123",
+  });
+});
+
+test("complete rejects sent without provider message id", async () => {
+  const repository = new FakeRepository();
+
+  const response = await handleMcvCompleteRequest(
+    request("complete", completeBody({
+      outcome: "sent",
+      providerMessageId: null,
+    })),
+    dependencies(repository),
+  );
+
+  assert.equal(response.status, 422);
+  assert.equal(repository.completeCalls, 0);
+});
+
+test("complete rejects accepted with provider message id", async () => {
+  const repository = new FakeRepository();
+
+  const response = await handleMcvCompleteRequest(
+    request("complete", completeBody({
+      providerMessageId: "provider-message-123",
+    })),
+    dependencies(repository),
+  );
+
+  assert.equal(response.status, 422);
+  assert.equal(repository.completeCalls, 0);
+});
+
+test("complete accepts provider_send_failed as retryable failure", async () => {
+  const repository = new FakeRepository();
+
+  const response = await handleMcvCompleteRequest(
+    request("complete", completeBody({
+      outcome: "retryable_failure",
+      providerMessageId: null,
+      errorCode: "provider_send_failed",
+    })),
+    dependencies(repository),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(repository.completeCalls, 1);
+});
+
 for (const [outcome, status] of [
   ["idempotent_success", 200],
   ["completion_conflict", 409],
