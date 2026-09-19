@@ -39,6 +39,8 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
     email,
     avatar: avatarUrl || picture || "",
   };
+  const deploymentVersion = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
+
   const ticketRealtimeScope = {
     organizationId:
       authContext.status === "resolved" && authContext.userType === "tenant" ? authContext.organizationId : null,
@@ -53,6 +55,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
       currentUser={currentUser}
       logoutAction={logoutAction}
       deskAccess={deskAccess}
+      deploymentVersion={deploymentVersion}
       ticketRealtimeScope={ticketRealtimeScope}
     >
       {children}

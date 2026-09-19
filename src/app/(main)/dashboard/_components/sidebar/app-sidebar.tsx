@@ -24,6 +24,7 @@ import { NavUser } from "./nav-user";
 export function AppSidebar({
   currentUser,
   logoutAction,
+  deploymentVersion,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   currentUser: {
@@ -33,6 +34,7 @@ export function AppSidebar({
     avatar: string;
   };
   logoutAction: () => Promise<void>;
+  deploymentVersion: string;
 }) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
     useShallow((s) => ({
@@ -62,6 +64,9 @@ export function AppSidebar({
                 />
               </Link>
             </SidebarMenuButton>
+            <p className="px-2 pt-0.5 font-medium text-[9px] text-muted-foreground/50 tracking-wide group-data-[collapsible=icon]:hidden">
+              Ver. {deploymentVersion}
+            </p>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

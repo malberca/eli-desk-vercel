@@ -37,6 +37,7 @@ type DashboardShellClientProps = {
   logoutAction: () => Promise<void>;
   children: React.ReactNode;
   deskAccess: readonly DeskFeatureAccessPresentation[];
+  deploymentVersion: string;
   ticketRealtimeScope: {
     organizationId: string | null;
     consorcioIds: readonly string[];
@@ -113,6 +114,7 @@ export function DashboardShellClient({
   currentUser,
   logoutAction,
   deskAccess,
+  deploymentVersion,
   ticketRealtimeScope,
   children,
 }: DashboardShellClientProps) {
@@ -137,7 +139,13 @@ export function DashboardShellClient({
     </div>
   ) : (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar currentUser={currentUser} variant={variant} collapsible={collapsible} logoutAction={logoutAction} />
+      <AppSidebar
+        currentUser={currentUser}
+        variant={variant}
+        collapsible={collapsible}
+        logoutAction={logoutAction}
+        deploymentVersion={deploymentVersion}
+      />
       <SidebarInset
         className={cn(
           "[html[data-content-layout=centered]_&]:mx-auto! [html[data-content-layout=centered]_&]:max-w-screen-2xl!",
