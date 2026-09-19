@@ -8,6 +8,7 @@ import {
   closeTicket as closeTicketRepository,
   createTicket as createTicketRepository,
   getDashboardSummary,
+  getTicketById as getTicketByIdRepository,
   getTicketTrend,
   listEdificios,
   listTickets as listTicketsRepository,
@@ -42,6 +43,20 @@ export async function listTickets(): Promise<ActionResult<TicketRecord[]>> {
   return withTenant("No se pudieron cargar los tickets.", async (supabase) => {
     const scope = await getResolvedDeskTicketScope();
     return scope === null || isEmptyDeskTicketScope(scope) ? [] : listTicketsRepository(supabase, scope);
+  });
+}
+
+export async function getTicketById(id: string): Promise<ActionResult<TicketRecord | null>> {
+  if (!id) return { success: false, error: "El ticket es obligatorio." };
+
+  return withTenant("No se pudo cargar el ticket.", async (supabase, organizationId) => {
+    const scope = await getResolvedDeskTicketScope();
+
+    if (scope === null || isEmptyDeskTicketScope(scope)) {
+      return null;
+    }
+
+    return getTicketByIdRepository(supabase, organizationId, scope, id);
   });
 }
 

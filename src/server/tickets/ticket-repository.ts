@@ -93,6 +93,33 @@ export async function listTickets(supabase: DbClient, scope: DeskTicketScope): P
   return ((data ?? []) as Record<string, unknown>[]).map(normalizeTicket);
 }
 
+export async function getTicketById(
+  supabase: DbClient,
+  organizationId: string,
+  scope: DeskTicketScope,
+  ticketId: string,
+): Promise<TicketRecord | null> {
+  if (scope.kind === "explicit" && scope.consorcioIds.length === 0) return null;
+
+  let query = supabase
+    .from("tickets")
+    .select(TICKET_SELECT)
+    .eq("id", ticketId)
+    .eq("organization_id", organizationId)
+    .is("deleted_at", null);
+
+  if (scope.kind === "explicit") {
+    query = query.in("edificio_id", scope.consorcioIds);
+  }
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) throwDatabaseError(error);
+  if (!data) return null;
+
+  return normalizeTicket(data as Record<string, unknown>);
+}
+
 export async function listEdificios(supabase: DbClient, scope: DeskTicketScope) {
   if (scope.kind === "explicit" && scope.consorcioIds.length === 0) return [];
   let query = supabase.from("edificios").select("id, nombre").order("nombre");
