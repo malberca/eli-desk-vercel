@@ -41,12 +41,11 @@ function MobileGreetingMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="min-w-0 rounded-2xl border border-white/80 bg-white/85 px-4 py-3 text-left font-semibold text-slate-700 text-sm shadow-sm"
-          aria-label="Abrir menú de usuario"
-        >
-          <span className="block truncate">Hola, {currentUser.name} 👋</span>
+        <button type="button" className="dashboard-greeting w-full text-left" aria-label="Abrir menú de usuario">
+          <span className="block text-[clamp(3.75rem,13vw,7rem)] text-slate-900 leading-[0.88] tracking-[-0.06em]">
+            <span className="font-light">Hola </span>
+            <span className="font-bold">{currentUser.name}</span>
+          </span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-52 rounded-2xl p-1">
@@ -99,9 +98,9 @@ function SummaryCard({
         <div className="h-8 w-20 animate-pulse rounded-full bg-muted/70" />
       ) : (
         <>
-          <p className="font-medium text-foreground/80 text-sm">{title}</p>
-          <p className="mt-3 font-semibold text-3xl text-foreground tracking-tight">{value}</p>
-          <p className="mt-2 text-muted-foreground text-sm">{detail}</p>
+          <p className="font-medium text-slate-700 text-sm">{title}</p>
+          <p className="mt-3 font-semibold text-3xl text-slate-950 tracking-tight">{value}</p>
+          <p className="mt-2 text-slate-500 text-sm">{detail}</p>
         </>
       )}
     </div>
@@ -115,7 +114,7 @@ export function MobileDashboardHome() {
 
   return (
     <div className="space-y-6 md:hidden">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/78 p-4 shadow-[0_25px_80px_-32px_rgba(15,23,42,0.35)] backdrop-blur-2xl">
+      <section className="relative flex min-h-[230px] items-center overflow-hidden rounded-[2rem] border border-white/70 bg-white/78 px-7 py-10 shadow-[0_25px_80px_-32px_rgba(15,23,42,0.35)] backdrop-blur-2xl">
         <MobileGreetingMenu />
       </section>
       <section className="space-y-3">
