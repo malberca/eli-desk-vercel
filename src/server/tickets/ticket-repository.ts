@@ -191,7 +191,20 @@ export async function getTicketTrend(supabase: DbClient, scope: DeskTicketScope)
   return (data ?? []) as { status: string; created_at: string | null; updated_at: string | null }[];
 }
 
-async function assertEdificioAccess(supabase: DbClient, organizationId: string, edificioId: string) {
+function isEdificioInScope(scope: DeskTicketScope, edificioId: string) {
+  return scope.kind === "all_consorcios" || scope.consorcioIds.includes(edificioId);
+}
+
+async function assertEdificioAccess(
+  supabase: DbClient,
+  organizationId: string,
+  scope: DeskTicketScope,
+  edificioId: string,
+) {
+  if (!isEdificioInScope(scope, edificioId)) {
+    throw new Error("El consorcio no está habilitado para el acceso actual.");
+  }
+
   const { data, error } = await supabase
     .from("edificios")
     .select("id")
@@ -214,10 +227,11 @@ export type CreateTicketInput = {
 export async function createTicket(
   supabase: DbClient,
   organizationId: string,
+  scope: DeskTicketScope,
   createdByUserId: string,
   input: CreateTicketInput,
 ): Promise<TicketRecord> {
-  await assertEdificioAccess(supabase, organizationId, input.edificio_id);
+  await assertEdificioAccess(supabase, organizationId, scope, input.edificio_id);
   const now = new Date();
   const prefix = `ELI-${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, "0")}`;
 
@@ -257,17 +271,15 @@ export type UpdateTicketInput = Pick<
 export async function updateTicket(
   supabase: DbClient,
   organizationId: string,
+  scope: DeskTicketScope,
   id: string,
   input: UpdateTicketInput,
 ): Promise<TicketRecord> {
-  await assertEdificioAccess(supabase, organizationId, input.edificio_id);
-  const { data, error } = await supabase
-    .from("tickets")
-    .update(input)
-    .eq("id", id)
-    .eq("organization_id", organizationId)
-    .select(TICKET_SELECT)
-    .single();
+  await assertEdificioAccess(supabase, organizationId, scope, input.edificio_id);
+  let query = supabase.from("tickets").update(input).eq("id", id).eq("organization_id", organizationId);
+  if (scope.kind === "explicit") query = query.in("edificio_id", scope.consorcioIds);
+
+  const { data, error } = await query.select(TICKET_SELECT).single();
 
   if (error) throwDatabaseError(error);
   return normalizeTicket(data as Record<string, unknown>);
@@ -276,16 +288,14 @@ export async function updateTicket(
 export async function updateTicketStatus(
   supabase: DbClient,
   organizationId: string,
+  scope: DeskTicketScope,
   id: string,
   status: Exclude<TicketStatus, "cerrado">,
 ): Promise<TicketRecord> {
-  const { data, error } = await supabase
-    .from("tickets")
-    .update({ status })
-    .eq("id", id)
-    .eq("organization_id", organizationId)
-    .select(TICKET_SELECT)
-    .single();
+  let query = supabase.from("tickets").update({ status }).eq("id", id).eq("organization_id", organizationId);
+  if (scope.kind === "explicit") query = query.in("edificio_id", scope.consorcioIds);
+
+  const { data, error } = await query.select(TICKET_SELECT).single();
 
   if (error) throwDatabaseError(error);
   return normalizeTicket(data as Record<string, unknown>);
@@ -294,19 +304,21 @@ export async function updateTicketStatus(
 export async function closeTicket(
   supabase: DbClient,
   organizationId: string,
+  scope: DeskTicketScope,
   id: string,
   closedReason: string,
 ): Promise<TicketRecord> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("tickets")
     .update({
       status: "cerrado",
       closed_reason: closedReason,
     })
     .eq("id", id)
-    .eq("organization_id", organizationId)
-    .select(TICKET_SELECT)
-    .single();
+    .eq("organization_id", organizationId);
+  if (scope.kind === "explicit") query = query.in("edificio_id", scope.consorcioIds);
+
+  const { data, error } = await query.select(TICKET_SELECT).single();
 
   if (error) throwDatabaseError(error);
   return normalizeTicket(data as Record<string, unknown>);
