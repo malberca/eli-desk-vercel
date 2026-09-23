@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { ArrowLeft } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAuthContext } from "@/lib/auth/get-auth-context";
@@ -10,10 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 import { type CommunityDetail, getCommunityDetail } from "@/server/communities/community-repository";
 
+import { ActiveTicketsTable } from "../_components/active-tickets-table";
 import { UnitsTable } from "../_components/units-table";
-
-const RECENT_TICKETS_LIMIT = 5;
-const TICKET_STATUS_LABELS: Record<string, string> = { abierto: "Abierto", en_proceso: "En proceso" };
 
 function MessageState({ title, body }: { title: string; body: string }) {
   return (
@@ -123,23 +120,7 @@ export default async function ConsorcioDetailPage({ params }: { params: Promise<
           {community.activeTickets.length === 0 ? (
             <EmptyState>No hay tickets activos.</EmptyState>
           ) : (
-            <div className="space-y-2">
-              {community.activeTickets.slice(0, RECENT_TICKETS_LIMIT).map((ticket) => (
-                <div
-                  key={ticket.id}
-                  className="grid gap-1 rounded-lg border p-4 md:grid-cols-[140px_minmax(0,1fr)_auto] md:items-center md:gap-4"
-                >
-                  <p className="font-semibold">{ticket.code}</p>
-                  <p className="truncate text-muted-foreground text-sm">{ticket.description ?? "Sin descripción"}</p>
-                  <div className="flex items-center gap-3 md:justify-end">
-                    <span className="text-muted-foreground text-xs">
-                      {new Date(ticket.createdAt).toLocaleDateString("es-AR")}
-                    </span>
-                    <Badge variant="outline">{TICKET_STATUS_LABELS[ticket.status] ?? ticket.status}</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ActiveTicketsTable tickets={community.activeTickets} />
           )}
         </CardContent>
       </Card>
