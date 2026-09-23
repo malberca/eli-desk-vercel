@@ -10,6 +10,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 import { type CommunityDetail, getCommunityDetail } from "@/server/communities/community-repository";
 
+import { UnitsTable } from "../_components/units-table";
+
+const RECENT_TICKETS_LIMIT = 5;
 const TICKET_STATUS_LABELS: Record<string, string> = { abierto: "Abierto", en_proceso: "En proceso" };
 
 function MessageState({ title, body }: { title: string; body: string }) {
@@ -102,60 +105,26 @@ export default async function ConsorcioDetailPage({ params }: { params: Promise<
           {community.units.length === 0 ? (
             <EmptyState>Este consorcio no tiene unidades cargadas.</EmptyState>
           ) : (
-            <div className="space-y-3">
-              {community.units.map((unit) => (
-                <div key={unit.id} className="space-y-3 rounded-lg border p-4">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <p className="font-semibold">Unidad {unit.number ?? "s/n"}</p>
-                    {unit.floor && <span className="text-muted-foreground text-sm">Piso {unit.floor}</span>}
-                    {unit.type && <span className="text-muted-foreground text-sm">{unit.type}</span>}
-                    {unit.status && (
-                      <Badge variant="outline" className="ml-auto">
-                        {unit.status}
-                      </Badge>
-                    )}
-                  </div>
-                  {unit.residents.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">Sin residentes activos.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {unit.residents.map((resident) => (
-                        <li
-                          key={resident.id}
-                          className="grid gap-1 text-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center"
-                        >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-medium">{resident.name}</span>
-                            {resident.relationship && (
-                              <span className="text-muted-foreground">{resident.relationship}</span>
-                            )}
-                            {resident.isPrimary && <Badge variant="secondary">Principal</Badge>}
-                          </div>
-                          <div className="flex flex-wrap gap-x-4 text-muted-foreground md:justify-end">
-                            {resident.phone && <span>{resident.phone}</span>}
-                            {resident.email && <span className="break-all">{resident.email}</span>}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ))}
-            </div>
+            <UnitsTable units={community.units} />
           )}
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
           <CardTitle className="text-lg">Tickets activos</CardTitle>
+          {community.activeTickets.length > 0 && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/tickets?consorcio=${community.id}`}>Ver todos los tickets</Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {community.activeTickets.length === 0 ? (
             <EmptyState>No hay tickets activos.</EmptyState>
           ) : (
             <div className="space-y-2">
-              {community.activeTickets.map((ticket) => (
+              {community.activeTickets.slice(0, RECENT_TICKETS_LIMIT).map((ticket) => (
                 <div
                   key={ticket.id}
                   className="grid gap-1 rounded-lg border p-4 md:grid-cols-[140px_minmax(0,1fr)_auto] md:items-center md:gap-4"

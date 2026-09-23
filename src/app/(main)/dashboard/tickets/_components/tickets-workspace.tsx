@@ -72,7 +72,7 @@ function csvValue(value: string | null | undefined) {
   return `"${safeText.replaceAll('"', '""')}"`;
 }
 
-export function TicketsWorkspace() {
+export function TicketsWorkspace({ initialEdificioFilter }: { initialEdificioFilter?: string }) {
   const [tickets, setTickets] = React.useState<TicketRecord[]>([]);
   const [edificios, setEdificios] = React.useState<{ id: string; nombre: string }[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -80,7 +80,7 @@ export function TicketsWorkspace() {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("todos");
   const [priorityFilter, setPriorityFilter] = React.useState("todas");
-  const [edificioFilter, setEdificioFilter] = React.useState("todos");
+  const [edificioFilter, setEdificioFilter] = React.useState(initialEdificioFilter ?? "todos");
   const [selected, setSelected] = React.useState<TicketRecord | null>(null);
   const [formOpen, setFormOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<TicketRecord | null>(null);
@@ -99,8 +99,13 @@ export function TicketsWorkspace() {
     const [ticketResult, edificioResult] = await Promise.all([listTickets(), listTicketEdificios()]);
     if (!ticketResult.success) setError(ticketResult.error);
     else setTickets(ticketResult.data);
-    if (edificioResult.success) setEdificios(edificioResult.data);
-    else if (!ticketResult.success) setError(edificioResult.error);
+    if (edificioResult.success) {
+      setEdificios(edificioResult.data);
+      // A consorcio from the URL that is unknown or not assigned falls back to all.
+      setEdificioFilter((current) =>
+        current === "todos" || edificioResult.data.some((edificio) => edificio.id === current) ? current : "todos",
+      );
+    } else if (!ticketResult.success) setError(edificioResult.error);
     setLoading(false);
   }, []);
 
