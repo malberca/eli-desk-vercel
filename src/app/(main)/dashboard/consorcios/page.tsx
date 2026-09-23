@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
@@ -66,9 +68,10 @@ export default async function ConsorciosPage() {
                 <span className="text-right">Tickets activos</span>
               </div>
               {communities.map((community) => (
-                <div
+                <Link
                   key={community.id}
-                  className="grid gap-1 rounded-lg border p-4 md:grid-cols-[minmax(0,1fr)_120px_120px] md:items-center"
+                  href={`/dashboard/consorcios/${community.id}`}
+                  className="grid gap-1 rounded-lg border p-4 transition-colors hover:bg-muted/50 md:grid-cols-[minmax(0,1fr)_120px_120px] md:items-center"
                 >
                   <p className="truncate font-semibold">{community.name}</p>
                   <p className="text-muted-foreground text-sm md:text-right md:text-foreground">
@@ -79,7 +82,7 @@ export default async function ConsorciosPage() {
                     <span className="md:hidden">Tickets activos: </span>
                     {community.activeTicketCount}
                   </p>
-                </div>
+                </Link>
               ))}
             </div>
           )}
