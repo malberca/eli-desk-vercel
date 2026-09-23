@@ -43,7 +43,10 @@ const FULL_ROWS = {
     { id: "r1", nombre_completo: "Ana", telefono: null, email: null },
     { id: "r2", nombre_completo: "Beto", telefono: "11", email: "b@x.com" },
   ],
-  tickets: [{ id: "t1", ticket_code: "ELI-1", description: "x", status: "abierto", created_at: "2026-09-01" }],
+  tickets: [
+    { id: "t1", ticket_code: "ELI-1", unidad_id: "u1", description: "x", status: "abierto", created_at: "2026-09-01" },
+    { id: "t2", ticket_code: "ELI-2", unidad_id: null, description: "y", status: "abierto", created_at: "2026-08-01" },
+  ],
 };
 
 test("getCommunityDetail no consulta si el consorcio no está en el scope explicit", async () => {
@@ -95,4 +98,18 @@ test("getCommunityDetail arma unidades con residentes, principal primero", async
     ],
   );
   assert.equal(result?.activeTickets[0].code, "ELI-1");
+});
+
+test("getCommunityDetail muestra el número de unidad de cada ticket, o null si no tiene", async () => {
+  const { client } = createFakeClient(FULL_ROWS);
+
+  const result = await getCommunityDetail(client, ORGANIZATION_ID, { kind: "all_consorcios" }, COMMUNITY_ID);
+
+  assert.deepEqual(
+    result?.activeTickets.map((ticket) => [ticket.code, ticket.unitNumber]),
+    [
+      ["ELI-1", "1A"],
+      ["ELI-2", null],
+    ],
+  );
 });

@@ -31,6 +31,7 @@ export type CommunityUnit = {
 export type CommunityTicket = {
   id: string;
   code: string;
+  unitNumber: string | null;
   description: string | null;
   status: string;
   createdAt: string;
@@ -104,7 +105,14 @@ type LinkRow = {
   is_primary: boolean | null;
 };
 type ResidentRow = { id: string; nombre_completo: string | null; telefono: string | null; email: string | null };
-type TicketRow = { id: string; ticket_code: string; description: string | null; status: string; created_at: string };
+type TicketRow = {
+  id: string;
+  ticket_code: string;
+  unidad_id: string | null;
+  description: string | null;
+  status: string;
+  created_at: string;
+};
 
 export async function getCommunityDetail(
   supabase: SupabaseClient,
@@ -132,7 +140,7 @@ export async function getCommunityDetail(
       .order("numero"),
     supabase
       .from("tickets")
-      .select("id, ticket_code, description, status, created_at")
+      .select("id, ticket_code, unidad_id, description, status, created_at")
       .eq("organization_id", organizationId)
       .eq("edificio_id", communityId)
       .is("deleted_at", null)
@@ -143,6 +151,7 @@ export async function getCommunityDetail(
   if (tickets.error) throw new Error(tickets.error.message);
 
   const unitRows = (units.data ?? []) as UnitRow[];
+  const unitNumberById = new Map(unitRows.map((unit) => [unit.id, unit.numero]));
   const residentsByUnit = await listResidentsByUnit(
     supabase,
     organizationId,
@@ -163,6 +172,7 @@ export async function getCommunityDetail(
     activeTickets: ((tickets.data ?? []) as TicketRow[]).map((ticket) => ({
       id: ticket.id,
       code: ticket.ticket_code,
+      unitNumber: ticket.unidad_id ? (unitNumberById.get(ticket.unidad_id) ?? null) : null,
       description: ticket.description,
       status: ticket.status,
       createdAt: ticket.created_at,
