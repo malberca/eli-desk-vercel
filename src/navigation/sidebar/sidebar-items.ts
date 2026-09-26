@@ -8,6 +8,7 @@ import {
   FileText,
   LayoutDashboard,
   type LucideIcon,
+  Rocket,
   Scale,
   Settings,
   ShieldCheck,
@@ -67,6 +68,15 @@ export const deskNavigationItems: readonly DeskNavigationItem[] = [
     availability: "available",
     href: "/dashboard/default",
     placements: ["mobile_primary", "desktop"],
+    desktopSection: "primary",
+  },
+  {
+    id: "onboarding",
+    label: "Onboarding",
+    icon: Rocket,
+    availability: "available",
+    href: "/dashboard/onboarding",
+    placements: ["mobile_more", "desktop"],
     desktopSection: "primary",
   },
   {
