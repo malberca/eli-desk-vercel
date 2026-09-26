@@ -131,16 +131,14 @@ export async function getCommunityDetail(
 ): Promise<CommunityDetail | null> {
   if (scope.kind === "explicit" && !scope.consorcioIds.includes(communityId)) return null;
 
-  const community = await supabase
-    .from("edificios")
-    .select("id, nombre, direccion, estado, created_at")
-    .eq("id", communityId)
-    .eq("organization_id", organizationId)
-    .maybeSingle();
-  if (community.error) throw new Error(community.error.message);
-  if (!community.data) return null;
-
-  const [units, tickets] = await Promise.all([
+  // Units and tickets are filtered by the same org and community, so they can load alongside the community check.
+  const [community, units, tickets] = await Promise.all([
+    supabase
+      .from("edificios")
+      .select("id, nombre, direccion, estado, created_at")
+      .eq("id", communityId)
+      .eq("organization_id", organizationId)
+      .maybeSingle(),
     supabase
       .from("unidades")
       .select("id, numero, piso, tipo, estado")
@@ -156,6 +154,8 @@ export async function getCommunityDetail(
       .in("status", ACTIVE_TICKET_STATUSES)
       .order("created_at", { ascending: false }),
   ]);
+  if (community.error) throw new Error(community.error.message);
+  if (!community.data) return null;
   if (units.error) throw new Error(units.error.message);
   if (tickets.error) throw new Error(tickets.error.message);
 

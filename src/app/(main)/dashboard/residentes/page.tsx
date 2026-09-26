@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getAuthContext } from "@/lib/auth/get-auth-context";
+import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 import { listResidents, type ResidentSummary } from "@/server/residents/resident-repository";
@@ -22,7 +22,7 @@ async function loadResidents(): Promise<ResidentSummary[] | null> {
     const access = await getDeskFeatureAccess("residentes");
     if (access?.consorcioScope == null) return null;
     const supabase = await createClient();
-    const context = await getAuthContext(supabase);
+    const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return null;
     return await listResidents(supabase, context.organizationId, access.consorcioScope);
   } catch {
@@ -31,7 +31,8 @@ async function loadResidents(): Promise<ResidentSummary[] | null> {
 }
 
 export default async function ResidentesPage() {
-  const access = await getDeskFeatureAccess("residentes");
+  // Auth starts alongside access; the loaders below reuse the cached result.
+  const [access] = await Promise.all([getDeskFeatureAccess("residentes"), getRequestAuthContext()]);
   if (access?.state !== "resolved") {
     return <MessageState title="Sin acceso" body="No se puede mostrar el módulo con el acceso actual." />;
   }

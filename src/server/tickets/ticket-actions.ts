@@ -1,6 +1,6 @@
 "use server";
 
-import { getAuthContext } from "@/lib/auth/get-auth-context";
+import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getResolvedDeskTicketScope, isEmptyDeskTicketScope } from "@/server/access/resolve-desk-ticket-scope";
 
@@ -26,7 +26,7 @@ async function withTenant<T>(
 ): Promise<ActionResult<T>> {
   try {
     const supabase = await createClient();
-    const context = await getAuthContext(supabase);
+    const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant" || !context.organizationId || !context.userId) {
       return { success: false, error: "No se pudo resolver la organización autorizada." };
     }

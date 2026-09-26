@@ -1,4 +1,4 @@
-import { getAuthContext } from "@/lib/auth/get-auth-context";
+import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 import { type CommunitySummary, getCommunityDetail, listCommunities } from "@/server/communities/community-repository";
@@ -22,7 +22,7 @@ async function loadCommunities(): Promise<CommunitySummary[] | null> {
     const access = await getDeskFeatureAccess("consorcios");
     if (access?.consorcioScope == null) return null;
     const supabase = await createClient();
-    const context = await getAuthContext(supabase);
+    const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return null;
     return await listCommunities(supabase, context.organizationId, access.consorcioScope);
   } catch {
@@ -35,7 +35,7 @@ async function loadCommunity(communityId: string): Promise<CommunityDrawerResult
     const access = await getDeskFeatureAccess("consorcios");
     if (access?.consorcioScope == null) return { kind: "error" };
     const supabase = await createClient();
-    const context = await getAuthContext(supabase);
+    const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return { kind: "error" };
     const community = await getCommunityDetail(supabase, context.organizationId, access.consorcioScope, communityId);
     return community ? { kind: "ok", community } : { kind: "not_found" };
@@ -45,7 +45,8 @@ async function loadCommunity(communityId: string): Promise<CommunityDrawerResult
 }
 
 export default async function ConsorciosPage({ searchParams }: { searchParams: Promise<{ consorcio?: string }> }) {
-  const access = await getDeskFeatureAccess("consorcios");
+  // Auth starts alongside access; the loaders below reuse the cached result.
+  const [access] = await Promise.all([getDeskFeatureAccess("consorcios"), getRequestAuthContext()]);
   if (access?.state !== "resolved") {
     return <MessageState title="Sin acceso" body="No se puede mostrar el módulo con el acceso actual." />;
   }

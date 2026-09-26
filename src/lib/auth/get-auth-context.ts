@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 
 import type { AuthContext, PlatformRole, TenantRole, UnresolvedReason } from "./types";
@@ -160,6 +162,10 @@ export async function getAuthContext(client?: SupabaseServerClient): Promise<Aut
   });
 }
 
+// Resolved once per server render and shared by the layout, the page and its loaders.
+// Not for server actions that change the session (e.g. login), which need a fresh read.
+export const getRequestAuthContext = cache(() => getAuthContext());
+
 export async function getAuthContextForIdentity(
   supabase: SupabaseServerClient,
   identity: AuthIdentity,
@@ -167,6 +173,12 @@ export async function getAuthContextForIdentity(
   const base = getAuthenticatedBase({
     id: identity.userId,
     email: identity.email ?? null,
+  });
+  // Both lookups are independent; start the membership one now so it runs alongside platform_users.
+  // Its error only surfaces if the result is used, as before.
+  const membershipStatesPromise = getAuthMembershipStates(supabase);
+  membershipStatesPromise.catch(() => {
+    // Handled where the result is awaited; this only avoids an unhandled rejection meanwhile.
   });
   const platformUsers = await getPlatformUsers(supabase, identity.userId);
   const activePlatformUsers = platformUsers.filter((platformUser) => platformUser.status === ACTIVE_STATUS);
@@ -185,7 +197,7 @@ export async function getAuthContextForIdentity(
     };
   }
 
-  const membershipStates = await getAuthMembershipStates(supabase);
+  const membershipStates = await membershipStatesPromise;
   const validMemberships = membershipStates.filter(
     (membershipState): membershipState is ValidTenantMembership =>
       isTenantRole(membershipState.membership_role) &&
