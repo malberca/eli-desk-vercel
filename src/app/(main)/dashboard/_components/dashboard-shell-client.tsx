@@ -127,7 +127,7 @@ export function DashboardShellClient({
 
   const content = !mounted ? (
     <div className="flex min-h-dvh flex-col">
-      <div className={cn("h-full p-4 md:p-6")}>{children}</div>
+      <div className="flex flex-1 flex-col p-4 md:p-6">{children}</div>
     </div>
   ) : isMobile ? (
     <div className="min-h-dvh bg-[linear-gradient(180deg,#fffdf8_0%,#f7f8fc_58%,#f3f6fb_100%)]">
@@ -171,7 +171,7 @@ export function DashboardShellClient({
             </div>
           </div>
         </header>
-        <div className="h-full p-4 md:p-6">{children}</div>
+        <div className="flex flex-1 flex-col p-4 md:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
