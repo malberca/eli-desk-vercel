@@ -42,6 +42,9 @@ export type CommunityTicket = {
 export type CommunityDetail = {
   id: string;
   name: string;
+  address: string;
+  status: string | null;
+  createdAt: string | null;
   units: CommunityUnit[];
   activeTickets: CommunityTicket[];
 };
@@ -130,7 +133,7 @@ export async function getCommunityDetail(
 
   const community = await supabase
     .from("edificios")
-    .select("id, nombre")
+    .select("id, nombre, direccion, estado, created_at")
     .eq("id", communityId)
     .eq("organization_id", organizationId)
     .maybeSingle();
@@ -167,6 +170,9 @@ export async function getCommunityDetail(
   return {
     id: community.data.id,
     name: community.data.nombre,
+    address: community.data.direccion,
+    status: community.data.estado,
+    createdAt: community.data.created_at,
     units: unitRows.map((unit) => ({
       id: unit.id,
       number: unit.numero,

@@ -7,19 +7,18 @@ import { Ellipsis, Eye } from "lucide-react";
 import {
   FilterSelect,
   InitialsAvatar,
-  LIST_ACTION_CLASS,
-  LIST_CELL_CLASS,
-  LIST_HEAD_CLASS,
+  ListActionButton,
+  ListCell,
   ListCount,
   ListEmpty,
+  ListHead,
   ListSearch,
-  ListTableCard,
-  PILL_CLASS,
+  ListTable,
+  Pill,
+  type Tone,
 } from "@/app/(main)/dashboard/_components/list-table";
 import { relationshipLabel } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { OnboardingRequest } from "@/server/onboarding/onboarding-repository";
 
 const ALL = "todos";
@@ -27,12 +26,12 @@ const ALL = "todos";
 const STATUS_LABELS: Record<string, string> = {
   PENDING_VERIFICATION: "Pendiente de verificación",
 };
-const STATUS_CLASSES: Record<string, string> = {
-  PENDING_VERIFICATION: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+const STATUS_TONES: Record<string, Tone> = {
+  PENDING_VERIFICATION: "amber",
 };
-const RELATIONSHIP_CLASSES: Record<string, string> = {
-  propietario: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  inquilino: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
+const RELATIONSHIP_TONES: Record<string, Tone> = {
+  propietario: "blue",
+  inquilino: "violet",
 };
 const dateFormat = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short", year: "numeric" });
 
@@ -57,11 +56,7 @@ export function OnboardingRequestsList({ requests }: { requests: OnboardingReque
   );
 
   if (requests.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed bg-card p-10 text-center text-muted-foreground text-sm">
-        Todavía no hay solicitudes de onboarding.
-      </div>
-    );
+    return <ListEmpty>Todavía no hay solicitudes de onboarding.</ListEmpty>;
   }
 
   return (
@@ -99,74 +94,56 @@ export function OnboardingRequestsList({ requests }: { requests: OnboardingReque
       {visibleRequests.length === 0 ? (
         <ListEmpty>No hay solicitudes que coincidan con la búsqueda.</ListEmpty>
       ) : (
-        <ListTableCard>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className={LIST_HEAD_CLASS}>Solicitante</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Contacto</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Consorcio / Unidad</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Relación</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Recibida</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Estado</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Acciones</TableHead>
+        <ListTable>
+          <TableHeader>
+            <TableRow>
+              <ListHead>Solicitante</ListHead>
+              <ListHead>Contacto</ListHead>
+              <ListHead>Consorcio / Unidad</ListHead>
+              <ListHead>Relación</ListHead>
+              <ListHead>Recibida</ListHead>
+              <ListHead>Estado</ListHead>
+              <ListHead>Acciones</ListHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleRequests.map((request) => (
+              <TableRow key={request.id}>
+                <ListCell>
+                  <InitialsAvatar name={request.name} index={requests.indexOf(request)} />
+                </ListCell>
+                <ListCell muted>
+                  <p>{request.phone ?? "Sin teléfono"}</p>
+                  <p>{request.email}</p>
+                </ListCell>
+                <ListCell muted>
+                  <p className="font-medium text-foreground">{request.communityName}</p>
+                  <p>Unidad {request.unitNumber ?? "s/n"}</p>
+                </ListCell>
+                <ListCell>
+                  <Pill tone={RELATIONSHIP_TONES[request.relationship.toLowerCase()] ?? "neutral"}>
+                    {relationshipLabel(request.relationship) ?? "Sin definir"}
+                  </Pill>
+                </ListCell>
+                <ListCell muted>{dateFormat.format(new Date(request.createdAt))}</ListCell>
+                <ListCell>
+                  <Pill tone={STATUS_TONES[request.status] ?? "neutral"}>{statusLabel(request.status)}</Pill>
+                </ListCell>
+                <ListCell>
+                  <div className="flex items-center gap-3">
+                    <ListActionButton>
+                      <Eye className="size-4" />
+                      Ver
+                    </ListActionButton>
+                    <ListActionButton size="icon" aria-label="Más acciones">
+                      <Ellipsis className="size-4" />
+                    </ListActionButton>
+                  </div>
+                </ListCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleRequests.map((request) => (
-                <TableRow key={request.id}>
-                  <TableCell className={LIST_CELL_CLASS}>
-                    <InitialsAvatar name={request.name} index={requests.indexOf(request)} />
-                  </TableCell>
-                  <TableCell className={cn(LIST_CELL_CLASS, "text-[13px] text-muted-foreground leading-5")}>
-                    <p>{request.phone ?? "Sin teléfono"}</p>
-                    <p>{request.email}</p>
-                  </TableCell>
-                  <TableCell className={cn(LIST_CELL_CLASS, "text-[13px] text-muted-foreground leading-5")}>
-                    <p className="font-medium text-foreground">{request.communityName}</p>
-                    <p>Unidad {request.unitNumber ?? "s/n"}</p>
-                  </TableCell>
-                  <TableCell className={LIST_CELL_CLASS}>
-                    <span
-                      className={cn(
-                        PILL_CLASS,
-                        RELATIONSHIP_CLASSES[request.relationship.toLowerCase()] ?? "bg-muted text-muted-foreground",
-                      )}
-                    >
-                      {relationshipLabel(request.relationship) ?? "Sin definir"}
-                    </span>
-                  </TableCell>
-                  <TableCell className={cn(LIST_CELL_CLASS, "text-[13px] text-muted-foreground")}>
-                    {dateFormat.format(new Date(request.createdAt))}
-                  </TableCell>
-                  <TableCell className={LIST_CELL_CLASS}>
-                    <span
-                      className={cn(PILL_CLASS, STATUS_CLASSES[request.status] ?? "bg-muted text-muted-foreground")}
-                    >
-                      {statusLabel(request.status)}
-                    </span>
-                  </TableCell>
-                  <TableCell className={LIST_CELL_CLASS}>
-                    <div className="flex items-center gap-3">
-                      <Button variant="outline" className={LIST_ACTION_CLASS}>
-                        <Eye className="size-[18px]" />
-                        Ver
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        aria-label="Más acciones"
-                        className="size-11 rounded-[10px]"
-                      >
-                        <Ellipsis className="size-[18px]" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </ListTableCard>
+            ))}
+          </TableBody>
+        </ListTable>
       )}
     </div>
   );

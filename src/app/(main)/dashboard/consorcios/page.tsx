@@ -1,9 +1,10 @@
 import { getAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
-import { type CommunitySummary, listCommunities } from "@/server/communities/community-repository";
+import { type CommunitySummary, getCommunityDetail, listCommunities } from "@/server/communities/community-repository";
 
 import { CommunitiesList } from "./_components/communities-list";
+import { CommunityDrawer, type CommunityDrawerResult } from "./_components/community-drawer";
 
 function MessageState({ title, body }: { title: string; body: string }) {
   return (
@@ -29,13 +30,31 @@ async function loadCommunities(): Promise<CommunitySummary[] | null> {
   }
 }
 
-export default async function ConsorciosPage() {
+async function loadCommunity(communityId: string): Promise<CommunityDrawerResult> {
+  try {
+    const access = await getDeskFeatureAccess("consorcios");
+    if (access?.consorcioScope == null) return { kind: "error" };
+    const supabase = await createClient();
+    const context = await getAuthContext(supabase);
+    if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return { kind: "error" };
+    const community = await getCommunityDetail(supabase, context.organizationId, access.consorcioScope, communityId);
+    return community ? { kind: "ok", community } : { kind: "not_found" };
+  } catch {
+    return { kind: "error" };
+  }
+}
+
+export default async function ConsorciosPage({ searchParams }: { searchParams: Promise<{ consorcio?: string }> }) {
   const access = await getDeskFeatureAccess("consorcios");
   if (access?.state !== "resolved") {
     return <MessageState title="Sin acceso" body="No se puede mostrar el módulo con el acceso actual." />;
   }
 
-  const communities = await loadCommunities();
+  const { consorcio } = await searchParams;
+  const [communities, detail] = await Promise.all([
+    loadCommunities(),
+    consorcio ? loadCommunity(consorcio) : Promise.resolve(null),
+  ]);
   if (communities === null) {
     return <MessageState title="No se pudieron cargar los consorcios" body="Probá de nuevo en unos minutos." />;
   }
@@ -49,6 +68,7 @@ export default async function ConsorciosPage() {
       </header>
 
       <CommunitiesList communities={communities} />
+      {consorcio && detail && <CommunityDrawer key={consorcio} result={detail} />}
     </div>
   );
 }

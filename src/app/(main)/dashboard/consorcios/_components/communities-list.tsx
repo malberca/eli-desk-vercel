@@ -9,25 +9,30 @@ import { Eye } from "lucide-react";
 import {
   FilterSelect,
   InitialsAvatar,
-  LIST_ACTION_CLASS,
-  LIST_CELL_CLASS,
-  LIST_HEAD_CLASS,
+  ListActionButton,
+  ListCell,
   ListCount,
   ListEmpty,
+  ListHead,
   ListSearch,
-  ListTableCard,
-  PILL_CLASS,
+  ListTable,
+  Pill,
+  type Tone,
 } from "@/app/(main)/dashboard/_components/list-table";
 import { communityStatusLabel } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { CommunitySummary } from "@/server/communities/community-repository";
 
 const ALL = "todos";
-const STATUS_CLASSES: Record<string, string> = {
-  activo: "bg-green-500/10 text-green-700 dark:text-green-400",
-};
+const STATUS_TONES: Record<string, Tone> = { activo: "green" };
+
+export function CommunityStatusPill({ status }: { status: string | null }) {
+  return (
+    <Pill tone={STATUS_TONES[status?.toLowerCase() ?? ""] ?? "neutral"}>
+      {communityStatusLabel(status) ?? "Sin definir"}
+    </Pill>
+  );
+}
 
 export function CommunitiesList({ communities }: { communities: CommunitySummary[] }) {
   const [search, setSearch] = React.useState("");
@@ -42,11 +47,7 @@ export function CommunitiesList({ communities }: { communities: CommunitySummary
   );
 
   if (communities.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed bg-card p-10 text-center text-muted-foreground text-sm">
-        Todavía no hay consorcios cargados.
-      </div>
-    );
+    return <ListEmpty>Todavía no hay consorcios cargados.</ListEmpty>;
   }
 
   return (
@@ -72,63 +73,43 @@ export function CommunitiesList({ communities }: { communities: CommunitySummary
       {visibleCommunities.length === 0 ? (
         <ListEmpty>No hay consorcios que coincidan con la búsqueda.</ListEmpty>
       ) : (
-        <ListTableCard>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className={LIST_HEAD_CLASS}>Consorcio</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Dirección</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Unidades</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Tickets activos</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Estado</TableHead>
-                <TableHead className={LIST_HEAD_CLASS}>Acciones</TableHead>
+        <ListTable>
+          <TableHeader>
+            <TableRow>
+              <ListHead>Consorcio</ListHead>
+              <ListHead>Dirección</ListHead>
+              <ListHead>Unidades</ListHead>
+              <ListHead>Tickets activos</ListHead>
+              <ListHead>Estado</ListHead>
+              <ListHead>Acciones</ListHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleCommunities.map((community) => (
+              <TableRow key={community.id}>
+                <ListCell>
+                  <InitialsAvatar name={community.name} index={communities.indexOf(community)} />
+                </ListCell>
+                <ListCell muted>{community.address}</ListCell>
+                <ListCell>{community.unitCount}</ListCell>
+                <ListCell>
+                  <Pill tone={community.activeTicketCount > 0 ? "red" : "neutral"}>{community.activeTicketCount}</Pill>
+                </ListCell>
+                <ListCell>
+                  <CommunityStatusPill status={community.status} />
+                </ListCell>
+                <ListCell>
+                  <ListActionButton asChild>
+                    <Link href={`/dashboard/consorcios?consorcio=${community.id}`} scroll={false}>
+                      <Eye className="size-4" />
+                      Ver
+                    </Link>
+                  </ListActionButton>
+                </ListCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleCommunities.map((community) => (
-                <TableRow key={community.id}>
-                  <TableCell className={LIST_CELL_CLASS}>
-                    <InitialsAvatar name={community.name} index={communities.indexOf(community)} />
-                  </TableCell>
-                  <TableCell className={cn(LIST_CELL_CLASS, "text-[13px] text-muted-foreground")}>
-                    {community.address}
-                  </TableCell>
-                  <TableCell className={LIST_CELL_CLASS}>{community.unitCount}</TableCell>
-                  <TableCell className={LIST_CELL_CLASS}>
-                    <span
-                      className={cn(
-                        PILL_CLASS,
-                        community.activeTicketCount > 0
-                          ? "bg-red-500/10 text-red-700 dark:text-red-400"
-                          : "bg-muted text-muted-foreground",
-                      )}
-                    >
-                      {community.activeTicketCount}
-                    </span>
-                  </TableCell>
-                  <TableCell className={LIST_CELL_CLASS}>
-                    <span
-                      className={cn(
-                        PILL_CLASS,
-                        STATUS_CLASSES[community.status?.toLowerCase() ?? ""] ?? "bg-muted text-muted-foreground",
-                      )}
-                    >
-                      {communityStatusLabel(community.status) ?? "Sin definir"}
-                    </span>
-                  </TableCell>
-                  <TableCell className={LIST_CELL_CLASS}>
-                    <Button asChild variant="outline" className={LIST_ACTION_CLASS}>
-                      <Link href={`/dashboard/consorcios/${community.id}`}>
-                        <Eye className="size-[18px]" />
-                        Ver
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </ListTableCard>
+            ))}
+          </TableBody>
+        </ListTable>
       )}
     </div>
   );

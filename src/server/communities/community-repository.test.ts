@@ -33,7 +33,13 @@ function createFakeClient(rows: Record<string, unknown>) {
 }
 
 const FULL_ROWS = {
-  edificios: { id: COMMUNITY_ID, nombre: "Torre A" },
+  edificios: {
+    id: COMMUNITY_ID,
+    nombre: "Torre A",
+    direccion: "Ugarte 2200",
+    estado: "activo",
+    created_at: "2026-07-15",
+  },
   unidades: [{ id: "u1", numero: "1A", piso: "1", tipo: "departamento", estado: "ocupada" }],
   resident_unit_links: [
     { unidad_id: "u1", residente_id: "r1", relationship_type: "inquilino", is_primary: false },
@@ -90,6 +96,9 @@ test("getCommunityDetail arma unidades con residentes, principal primero", async
   const result = await getCommunityDetail(client, ORGANIZATION_ID, { kind: "all_consorcios" }, COMMUNITY_ID);
 
   assert.equal(result?.name, "Torre A");
+  assert.equal(result?.address, "Ugarte 2200");
+  assert.equal(result?.status, "activo");
+  assert.equal(result?.createdAt, "2026-07-15");
   assert.deepEqual(
     result?.units[0].residents.map((resident) => [resident.name, resident.isPrimary]),
     [
