@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { getCommunityDetail } from "./community-repository";
+import { getCommunityDetail, listCommunities } from "./community-repository";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -33,7 +33,13 @@ function createFakeClient(rows: Record<string, unknown>) {
 }
 
 const FULL_ROWS = {
-  edificios: { id: COMMUNITY_ID, nombre: "Torre A" },
+  edificios: {
+    id: COMMUNITY_ID,
+    nombre: "Torre A",
+    direccion: "Ugarte 2200",
+    estado: "activo",
+    created_at: "2026-07-15",
+  },
   unidades: [{ id: "u1", numero: "1A", piso: "1", tipo: "departamento", estado: "ocupada" }],
   resident_unit_links: [
     { unidad_id: "u1", residente_id: "r1", relationship_type: "inquilino", is_primary: false },
@@ -90,6 +96,9 @@ test("getCommunityDetail arma unidades con residentes, principal primero", async
   const result = await getCommunityDetail(client, ORGANIZATION_ID, { kind: "all_consorcios" }, COMMUNITY_ID);
 
   assert.equal(result?.name, "Torre A");
+  assert.equal(result?.address, "Ugarte 2200");
+  assert.equal(result?.status, "activo");
+  assert.equal(result?.createdAt, "2026-07-15");
   assert.deepEqual(
     result?.units[0].residents.map((resident) => [resident.name, resident.isPrimary]),
     [
@@ -112,4 +121,23 @@ test("getCommunityDetail muestra el número de unidad de cada ticket, o null si 
       ["ELI-2", null],
     ],
   );
+});
+
+test("listCommunities devuelve dirección y estado de cada consorcio", async () => {
+  const { client } = createFakeClient({
+    edificios: [{ id: COMMUNITY_ID, nombre: "Torre A", direccion: "Ugarte 2200", estado: "activo" }],
+    unidades: [{ edificio_id: COMMUNITY_ID }],
+    tickets: [],
+  });
+
+  const [community] = await listCommunities(client, ORGANIZATION_ID, { kind: "all_consorcios" });
+
+  assert.deepEqual(community, {
+    id: COMMUNITY_ID,
+    name: "Torre A",
+    address: "Ugarte 2200",
+    status: "activo",
+    unitCount: 1,
+    activeTicketCount: 0,
+  });
 });

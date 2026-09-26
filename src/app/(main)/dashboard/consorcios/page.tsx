@@ -1,10 +1,10 @@
-import Link from "next/link";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
-import { type CommunitySummary, listCommunities } from "@/server/communities/community-repository";
+import { type CommunitySummary, getCommunityDetail, listCommunities } from "@/server/communities/community-repository";
+
+import { CommunitiesList } from "./_components/communities-list";
+import { CommunityDrawer, type CommunityDrawerResult } from "./_components/community-drawer";
 
 function MessageState({ title, body }: { title: string; body: string }) {
   return (
@@ -30,13 +30,31 @@ async function loadCommunities(): Promise<CommunitySummary[] | null> {
   }
 }
 
-export default async function ConsorciosPage() {
+async function loadCommunity(communityId: string): Promise<CommunityDrawerResult> {
+  try {
+    const access = await getDeskFeatureAccess("consorcios");
+    if (access?.consorcioScope == null) return { kind: "error" };
+    const supabase = await createClient();
+    const context = await getAuthContext(supabase);
+    if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return { kind: "error" };
+    const community = await getCommunityDetail(supabase, context.organizationId, access.consorcioScope, communityId);
+    return community ? { kind: "ok", community } : { kind: "not_found" };
+  } catch {
+    return { kind: "error" };
+  }
+}
+
+export default async function ConsorciosPage({ searchParams }: { searchParams: Promise<{ consorcio?: string }> }) {
   const access = await getDeskFeatureAccess("consorcios");
   if (access?.state !== "resolved") {
     return <MessageState title="Sin acceso" body="No se puede mostrar el módulo con el acceso actual." />;
   }
 
-  const communities = await loadCommunities();
+  const { consorcio } = await searchParams;
+  const [communities, detail] = await Promise.all([
+    loadCommunities(),
+    consorcio ? loadCommunity(consorcio) : Promise.resolve(null),
+  ]);
   if (communities === null) {
     return <MessageState title="No se pudieron cargar los consorcios" body="Probá de nuevo en unos minutos." />;
   }
@@ -49,45 +67,8 @@ export default async function ConsorciosPage() {
         <p className="mt-1 text-muted-foreground">Consorcios que tenés a cargo, con sus unidades y tickets activos.</p>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">
-            {communities.length} {communities.length === 1 ? "consorcio" : "consorcios"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {communities.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground text-sm">
-              Todavía no hay consorcios cargados.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="hidden px-4 text-muted-foreground text-xs md:grid md:grid-cols-[minmax(0,1fr)_120px_120px]">
-                <span>Nombre</span>
-                <span className="text-right">Unidades</span>
-                <span className="text-right">Tickets activos</span>
-              </div>
-              {communities.map((community) => (
-                <Link
-                  key={community.id}
-                  href={`/dashboard/consorcios/${community.id}`}
-                  className="grid gap-1 rounded-lg border p-4 transition-colors hover:bg-muted/50 md:grid-cols-[minmax(0,1fr)_120px_120px] md:items-center"
-                >
-                  <p className="truncate font-semibold">{community.name}</p>
-                  <p className="text-muted-foreground text-sm md:text-right md:text-foreground">
-                    <span className="md:hidden">Unidades: </span>
-                    {community.unitCount}
-                  </p>
-                  <p className="text-muted-foreground text-sm md:text-right md:text-foreground">
-                    <span className="md:hidden">Tickets activos: </span>
-                    {community.activeTicketCount}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <CommunitiesList communities={communities} />
+      {consorcio && detail && <CommunityDrawer key={consorcio} result={detail} />}
     </div>
   );
 }

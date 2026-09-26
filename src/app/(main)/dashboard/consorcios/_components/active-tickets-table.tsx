@@ -4,15 +4,16 @@ import * as React from "react";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { ListCell, ListHead, ListTable, Pill, type Tone } from "@/app/(main)/dashboard/_components/list-table";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { CommunityTicket } from "@/server/communities/community-repository";
 
 import { paginate } from "./paginate";
 
 const PAGE_SIZE = 10;
 const TICKET_STATUS_LABELS: Record<string, string> = { abierto: "Abierto", en_proceso: "En proceso" };
+const TICKET_STATUS_TONES: Record<string, Tone> = { abierto: "amber", en_proceso: "blue" };
 
 export function ActiveTicketsTable({ tickets }: { tickets: CommunityTicket[] }) {
   const [page, setPage] = React.useState(1);
@@ -20,41 +21,45 @@ export function ActiveTicketsTable({ tickets }: { tickets: CommunityTicket[] }) 
 
   return (
     <div className="space-y-4">
-      <Table>
+      <ListTable>
         <TableHeader>
           <TableRow>
-            <TableHead>Código</TableHead>
-            <TableHead className="hidden md:table-cell">Unidad</TableHead>
-            <TableHead>Descripción</TableHead>
-            <TableHead className="hidden md:table-cell">Fecha</TableHead>
-            <TableHead>Estado</TableHead>
+            <ListHead>Código</ListHead>
+            <ListHead desktopOnly>Unidad</ListHead>
+            <ListHead>Descripción</ListHead>
+            <ListHead desktopOnly>Fecha</ListHead>
+            <ListHead>Estado</ListHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {current.items.map((ticket) => (
-            <TableRow key={ticket.id} className="align-top">
-              <TableCell>
+            <TableRow key={ticket.id}>
+              <ListCell>
                 <p className="font-semibold">{ticket.code}</p>
                 <p className="text-muted-foreground text-xs md:hidden">
                   {[ticket.unitNumber, new Date(ticket.createdAt).toLocaleDateString("es-AR")]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">{ticket.unitNumber ?? "—"}</TableCell>
-              <TableCell className="min-w-48 whitespace-normal text-muted-foreground">
+              </ListCell>
+              <ListCell muted desktopOnly>
+                {ticket.unitNumber ?? "—"}
+              </ListCell>
+              <ListCell muted wrap>
                 {ticket.description ?? "Sin descripción"}
-              </TableCell>
-              <TableCell className="hidden text-muted-foreground md:table-cell">
+              </ListCell>
+              <ListCell muted desktopOnly>
                 {new Date(ticket.createdAt).toLocaleDateString("es-AR")}
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline">{TICKET_STATUS_LABELS[ticket.status] ?? ticket.status}</Badge>
-              </TableCell>
+              </ListCell>
+              <ListCell>
+                <Pill tone={TICKET_STATUS_TONES[ticket.status] ?? "neutral"}>
+                  {TICKET_STATUS_LABELS[ticket.status] ?? ticket.status}
+                </Pill>
+              </ListCell>
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </ListTable>
 
       {current.pageCount > 1 && (
         <div className="flex items-center justify-end gap-2">

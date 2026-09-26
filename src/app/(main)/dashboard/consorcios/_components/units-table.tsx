@@ -2,17 +2,23 @@
 
 import * as React from "react";
 
-import { Search } from "lucide-react";
-
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  FilterSelect,
+  ListCell,
+  ListEmpty,
+  ListHead,
+  ListSearch,
+  ListTable,
+  Pill,
+  type Tone,
+} from "@/app/(main)/dashboard/_components/list-table";
+import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { CommunityUnit } from "@/server/communities/community-repository";
 
 import { relationshipLabel, unitStatusLabel, unitTypeLabel } from "./community-labels";
 import { ALL, filterUnits, type ResidentsFilter, statusOptions } from "./filter-units";
 
-const SELECT_CLASS = "h-10 rounded-md border bg-background px-3 text-sm";
+const STATUS_TONES: Record<string, Tone> = { ocupado: "green" };
 
 export function UnitsTable({ units }: { units: CommunityUnit[] }) {
   const [search, setSearch] = React.useState("");
@@ -22,99 +28,91 @@ export function UnitsTable({ units }: { units: CommunityUnit[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row">
-        <div className="relative flex-1">
-          <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
-          <Input
-            aria-label="Buscar unidad o residente"
-            placeholder="Buscar unidad o residente"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="h-10 pl-9"
-          />
-        </div>
-        <select
-          aria-label="Filtrar por estado"
-          value={status}
-          onChange={(event) => setStatus(event.target.value)}
-          className={SELECT_CLASS}
-        >
-          <option value={ALL}>Todos los estados</option>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <ListSearch
+          aria-label="Buscar unidad o residente"
+          placeholder="Buscar unidad o residente…"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <FilterSelect label="Filtrar por estado" value={status} onChange={(event) => setStatus(event.target.value)}>
+          <option value={ALL}>Estado: Todos</option>
           {statusOptions(units).map((value) => (
             <option key={value} value={value}>
-              {unitStatusLabel(value)}
+              Estado: {unitStatusLabel(value)}
             </option>
           ))}
-        </select>
-        <select
-          aria-label="Filtrar por residentes"
+        </FilterSelect>
+        <FilterSelect
+          label="Filtrar por residentes"
           value={residents}
           onChange={(event) => setResidents(event.target.value as ResidentsFilter)}
-          className={SELECT_CLASS}
         >
-          <option value={ALL}>Con y sin residentes</option>
+          <option value={ALL}>Residentes: Todas</option>
           <option value="con">Con residentes</option>
           <option value="sin">Sin residentes</option>
-        </select>
+        </FilterSelect>
       </div>
 
       {visibleUnits.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground text-sm">
-          No hay unidades que coincidan con la búsqueda.
-        </div>
+        <ListEmpty>No hay unidades que coincidan con la búsqueda.</ListEmpty>
       ) : (
-        <Table>
+        <ListTable>
           <TableHeader>
             <TableRow>
-              <TableHead>Unidad</TableHead>
-              <TableHead className="hidden md:table-cell">Piso</TableHead>
-              <TableHead className="hidden md:table-cell">Tipo</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Residentes</TableHead>
+              <ListHead>Unidad</ListHead>
+              <ListHead desktopOnly>Piso</ListHead>
+              <ListHead desktopOnly>Tipo</ListHead>
+              <ListHead>Estado</ListHead>
+              <ListHead>Residentes</ListHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {visibleUnits.map((unit) => (
-              <TableRow key={unit.id} className="align-top">
-                <TableCell>
+              <TableRow key={unit.id}>
+                <ListCell>
                   <p className="font-semibold">{unit.number ?? "s/n"}</p>
-                  <p className="text-muted-foreground text-xs md:hidden">
+                  <p className="text-muted-foreground text-sm md:hidden">
                     {[unit.floor && `Piso ${unit.floor}`, unitTypeLabel(unit.type)].filter(Boolean).join(" · ")}
                   </p>
-                </TableCell>
-                <TableCell className="hidden md:table-cell">{unit.floor ?? "—"}</TableCell>
-                <TableCell className="hidden md:table-cell">{unitTypeLabel(unit.type) ?? "—"}</TableCell>
-                <TableCell>
-                  {unit.status ? <Badge variant="outline">{unitStatusLabel(unit.status)}</Badge> : "—"}
-                </TableCell>
-                <TableCell className="whitespace-normal">
-                  {unit.residents.length === 0 ? (
-                    <span className="text-muted-foreground">Sin residentes</span>
+                </ListCell>
+                <ListCell muted desktopOnly>
+                  {unit.floor ?? "—"}
+                </ListCell>
+                <ListCell muted desktopOnly>
+                  {unitTypeLabel(unit.type) ?? "—"}
+                </ListCell>
+                <ListCell>
+                  {unit.status ? (
+                    <Pill tone={STATUS_TONES[unit.status.toLowerCase()] ?? "neutral"}>
+                      {unitStatusLabel(unit.status)}
+                    </Pill>
                   ) : (
-                    <ul className="space-y-1.5">
+                    "—"
+                  )}
+                </ListCell>
+                <ListCell wrap>
+                  {unit.residents.length === 0 ? (
+                    <span className="text-muted-foreground text-sm">Sin residentes</span>
+                  ) : (
+                    <ul className="space-y-2 text-sm">
                       {unit.residents.map((resident) => (
                         <li key={resident.id}>
-                          <div className="flex flex-wrap items-center gap-x-2">
-                            <span className="font-medium">{resident.name}</span>
-                            {resident.relationship && (
-                              <span className="text-muted-foreground">{relationshipLabel(resident.relationship)}</span>
-                            )}
-                            {resident.isPrimary && <Badge variant="secondary">Principal</Badge>}
-                          </div>
-                          {(resident.phone || resident.email) && (
-                            <p className="break-all text-muted-foreground text-xs">
-                              {[resident.phone, resident.email].filter(Boolean).join(" · ")}
-                            </p>
-                          )}
+                          <p className="font-medium">{resident.name}</p>
+                          <p className="text-muted-foreground">
+                            {[relationshipLabel(resident.relationship), resident.isPrimary && "Principal"]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
                         </li>
                       ))}
                     </ul>
                   )}
-                </TableCell>
+                </ListCell>
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </ListTable>
       )}
     </div>
   );

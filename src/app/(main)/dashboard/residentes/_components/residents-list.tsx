@@ -101,7 +101,7 @@ export function ResidentsList({ residents }: { residents: ResidentSummary[] }) {
                         <li key={unit.unitId} className="flex flex-wrap items-center gap-x-2">
                           <span className="font-medium">{unit.unitNumber ?? "s/n"}</span>
                           <Link
-                            href={`/dashboard/consorcios/${unit.communityId}`}
+                            href={`/dashboard/consorcios?consorcio=${unit.communityId}`}
                             className="underline-offset-4 hover:underline"
                           >
                             {unit.communityName}
