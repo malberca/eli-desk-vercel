@@ -1,3 +1,4 @@
+const COMMUNITY_STATUS_LABELS: Record<string, string> = { activo: "Activo", inactivo: "Inactivo" };
 const UNIT_STATUS_LABELS: Record<string, string> = { ocupado: "Ocupada", desocupado: "Desocupada" };
 const UNIT_TYPE_LABELS: Record<string, string> = { departamento: "Departamento" };
 const RELATIONSHIP_LABELS: Record<string, string> = { propietario: "Propietario", inquilino: "Inquilino" };
@@ -13,6 +14,7 @@ function label(labels: Record<string, string>, value: string | null) {
   return labels[value.toLowerCase()] ?? readable(value);
 }
 
+export const communityStatusLabel = (value: string | null) => label(COMMUNITY_STATUS_LABELS, value);
 export const unitStatusLabel = (value: string | null) => label(UNIT_STATUS_LABELS, value);
 export const unitTypeLabel = (value: string | null) => label(UNIT_TYPE_LABELS, value);
 export const relationshipLabel = (value: string | null) => label(RELATIONSHIP_LABELS, value);

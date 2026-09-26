@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { getCommunityDetail } from "./community-repository";
+import { getCommunityDetail, listCommunities } from "./community-repository";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -112,4 +112,23 @@ test("getCommunityDetail muestra el número de unidad de cada ticket, o null si 
       ["ELI-2", null],
     ],
   );
+});
+
+test("listCommunities devuelve dirección y estado de cada consorcio", async () => {
+  const { client } = createFakeClient({
+    edificios: [{ id: COMMUNITY_ID, nombre: "Torre A", direccion: "Ugarte 2200", estado: "activo" }],
+    unidades: [{ edificio_id: COMMUNITY_ID }],
+    tickets: [],
+  });
+
+  const [community] = await listCommunities(client, ORGANIZATION_ID, { kind: "all_consorcios" });
+
+  assert.deepEqual(community, {
+    id: COMMUNITY_ID,
+    name: "Torre A",
+    address: "Ugarte 2200",
+    status: "activo",
+    unitCount: 1,
+    activeTicketCount: 0,
+  });
 });

@@ -1,10 +1,9 @@
-import Link from "next/link";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 import { type CommunitySummary, listCommunities } from "@/server/communities/community-repository";
+
+import { CommunitiesList } from "./_components/communities-list";
 
 function MessageState({ title, body }: { title: string; body: string }) {
   return (
@@ -49,45 +48,7 @@ export default async function ConsorciosPage() {
         <p className="mt-1 text-muted-foreground">Consorcios que tenés a cargo, con sus unidades y tickets activos.</p>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">
-            {communities.length} {communities.length === 1 ? "consorcio" : "consorcios"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {communities.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground text-sm">
-              Todavía no hay consorcios cargados.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="hidden px-4 text-muted-foreground text-xs md:grid md:grid-cols-[minmax(0,1fr)_120px_120px]">
-                <span>Nombre</span>
-                <span className="text-right">Unidades</span>
-                <span className="text-right">Tickets activos</span>
-              </div>
-              {communities.map((community) => (
-                <Link
-                  key={community.id}
-                  href={`/dashboard/consorcios/${community.id}`}
-                  className="grid gap-1 rounded-lg border p-4 transition-colors hover:bg-muted/50 md:grid-cols-[minmax(0,1fr)_120px_120px] md:items-center"
-                >
-                  <p className="truncate font-semibold">{community.name}</p>
-                  <p className="text-muted-foreground text-sm md:text-right md:text-foreground">
-                    <span className="md:hidden">Unidades: </span>
-                    {community.unitCount}
-                  </p>
-                  <p className="text-muted-foreground text-sm md:text-right md:text-foreground">
-                    <span className="md:hidden">Tickets activos: </span>
-                    {community.activeTicketCount}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <CommunitiesList communities={communities} />
     </div>
   );
 }

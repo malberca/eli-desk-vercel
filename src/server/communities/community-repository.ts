@@ -6,6 +6,8 @@ import type { ConsorcioScope } from "@/lib/access/feature-scope-types";
 export type CommunitySummary = {
   id: string;
   name: string;
+  address: string;
+  status: string | null;
   unitCount: number;
   activeTicketCount: number;
 };
@@ -46,6 +48,8 @@ export type CommunityDetail = {
 
 const ACTIVE_TICKET_STATUSES = ["abierto", "en_proceso"];
 
+type CommunityRow = { id: string; nombre: string; direccion: string; estado: string | null };
+
 function countBy(rows: { edificio_id: unknown }[]) {
   const counts = new Map<string, number>();
   for (const row of rows) {
@@ -64,7 +68,7 @@ export async function listCommunities(
 
   let communitiesQuery = supabase
     .from("edificios")
-    .select("id, nombre")
+    .select("id, nombre, direccion, estado")
     .eq("organization_id", organizationId)
     .order("nombre");
   let unitsQuery = supabase.from("unidades").select("edificio_id").eq("organization_id", organizationId);
@@ -89,9 +93,11 @@ export async function listCommunities(
   const unitCounts = countBy(units.data ?? []);
   const ticketCounts = countBy(tickets.data ?? []);
 
-  return ((communities.data ?? []) as { id: string; nombre: string }[]).map((row) => ({
+  return ((communities.data ?? []) as CommunityRow[]).map((row) => ({
     id: row.id,
     name: row.nombre,
+    address: row.direccion,
+    status: row.estado,
     unitCount: unitCounts.get(row.id) ?? 0,
     activeTicketCount: ticketCounts.get(row.id) ?? 0,
   }));
