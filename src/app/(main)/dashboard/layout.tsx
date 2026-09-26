@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 
 import { DashboardShellClient } from "@/app/(main)/dashboard/_components/dashboard-shell-client";
-import { getAuthContext } from "@/lib/auth/get-auth-context";
+import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { SIDEBAR_COLLAPSIBLE_VALUES, SIDEBAR_VARIANT_VALUES } from "@/lib/preferences/layout";
 import { createClient } from "@/lib/supabase/server";
 import { resolveDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
@@ -20,7 +20,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
   const [variant, collapsible, authContext, ticketEdificios] = await Promise.all([
     getPreference("sidebar_variant", SIDEBAR_VARIANT_VALUES, "inset"),
     getPreference("sidebar_collapsible", SIDEBAR_COLLAPSIBLE_VALUES, "icon"),
-    getAuthContext(supabase),
+    getRequestAuthContext(),
     listTicketEdificios(),
   ]);
   const deskAccess = (await resolveDeskFeatureAccess()).map(({ featureId, lifecycle, state }) => ({
