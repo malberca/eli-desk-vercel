@@ -1,6 +1,6 @@
 import type { CommunityUnit } from "@/server/communities/community-repository";
 
-import { ALL, filterUnits, statusOptions } from "./filter-units";
+import { ALL, filterUnits, sortUnits, statusOptions } from "./filter-units";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -50,4 +50,22 @@ test("combina filtros", () => {
 
 test("las opciones de estado salen de los datos, sin repetidos ni vacíos", () => {
   assert.deepEqual(statusOptions([...UNITS, unit("3A", null)]), ["desocupado", "ocupado"]);
+});
+
+test("ordena PB primero y después los pisos, cada uno por letra", () => {
+  const units = ["2B", "10A", "1B", "PB B", "2A", "PB A", "1A", "s/d"].map((id) => unit(id, null));
+  assert.deepEqual(ids(sortUnits(units)), ["PB A", "PB B", "1A", "1B", "2A", "2B", "10A", "s/d"]);
+});
+
+test("usa el piso cuando viene cargado aparte del número", () => {
+  const units = [
+    { ...unit("B", null), floor: "1" },
+    { ...unit("A", null), floor: "1" },
+    { ...unit("B", null), floor: "PB" },
+    { ...unit("A", null), floor: "PB" },
+  ];
+  assert.deepEqual(
+    sortUnits(units).map((item) => `${item.floor} ${item.number}`),
+    ["PB A", "PB B", "1 A", "1 B"],
+  );
 });
