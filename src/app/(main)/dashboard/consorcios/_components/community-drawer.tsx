@@ -27,6 +27,7 @@ import type { CommunityDetail } from "@/server/communities/community-repository"
 import { ActiveTicketsTable } from "./active-tickets-table";
 import { CommunityStatusPill } from "./communities-list";
 import { relationshipLabel } from "./community-labels";
+import { sortUnits } from "./filter-units";
 import { UnitsTable } from "./units-table";
 
 export type CommunityDrawerResult =
@@ -70,7 +71,7 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
 }
 
 function CommunityDetailView({ community }: { community: CommunityDetail }) {
-  const residents = community.units.flatMap((unit) =>
+  const residents = sortUnits(community.units).flatMap((unit) =>
     unit.residents.map((resident) => ({ ...resident, unitNumber: unit.number })),
   );
   const activeResidentCount = new Set(residents.map((resident) => resident.id)).size;
