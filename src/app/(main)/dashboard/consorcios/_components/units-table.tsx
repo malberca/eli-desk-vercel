@@ -16,7 +16,7 @@ import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { CommunityUnit } from "@/server/communities/community-repository";
 
 import { relationshipLabel, unitStatusLabel, unitTypeLabel } from "./community-labels";
-import { ALL, filterUnits, type ResidentsFilter, statusOptions } from "./filter-units";
+import { ALL, filterUnits, type ResidentsFilter, sortUnits, statusOptions } from "./filter-units";
 
 const STATUS_TONES: Record<string, Tone> = { ocupado: "green" };
 
@@ -24,7 +24,7 @@ export function UnitsTable({ units }: { units: CommunityUnit[] }) {
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState(ALL);
   const [residents, setResidents] = React.useState<ResidentsFilter>(ALL);
-  const visibleUnits = filterUnits(units, { search, status, residents });
+  const visibleUnits = filterUnits(sortUnits(units), { search, status, residents });
 
   return (
     <div className="space-y-4">
