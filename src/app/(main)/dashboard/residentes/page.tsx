@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
@@ -50,16 +49,7 @@ export default async function ResidentesPage() {
         <p className="mt-1 text-muted-foreground">Residentes de tus consorcios, con sus unidades.</p>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">
-            {residents.length} {residents.length === 1 ? "residente" : "residentes"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResidentsList residents={residents} />
-        </CardContent>
-      </Card>
+      <ResidentsList residents={residents} />
     </div>
   );
 }
