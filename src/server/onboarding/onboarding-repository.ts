@@ -22,7 +22,7 @@ type RequestRow = {
   last_name: string;
   email: string;
   phone: string | null;
-  relationship_type: string;
+  relationship_type_code: string;
   status: string;
   created_at: string;
 };
@@ -43,7 +43,9 @@ export async function listOnboardingRequests(
 
   let requestsQuery = supabase
     .from("resident_onboarding_requests")
-    .select("id, edificio_id, unidad_id, first_name, last_name, email, phone, relationship_type, status, created_at")
+    .select(
+      "id, edificio_id, unidad_id, first_name, last_name, email, phone, relationship_type_code, status, created_at",
+    )
     .eq("organization_id", organizationId);
   let unitsQuery = supabase.from("unidades").select("id, numero").eq("organization_id", organizationId);
   let communitiesQuery = supabase.from("edificios").select("id, nombre").eq("organization_id", organizationId);
@@ -68,7 +70,7 @@ export async function listOnboardingRequests(
     email: row.email,
     communityName: communityById.get(row.edificio_id)?.nombre ?? "Sin consorcio",
     unitNumber: unitById.get(row.unidad_id)?.numero ?? null,
-    relationship: row.relationship_type,
+    relationship: row.relationship_type_code,
     status: row.status,
     createdAt: row.created_at,
   }));
