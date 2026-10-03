@@ -2,6 +2,7 @@ import { getRequestAuthContext } from "@/lib/auth/get-auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { getDeskFeatureAccess } from "@/server/access/resolve-desk-feature-access";
 import { type CommunitySummary, getCommunityDetail, listCommunities } from "@/server/communities/community-repository";
+import { listJoinLinks } from "@/server/join-links/join-link-repository";
 
 import { CommunitiesList } from "./_components/communities-list";
 import { CommunityDrawer, type CommunityDrawerResult } from "./_components/community-drawer";
@@ -38,7 +39,10 @@ async function loadCommunity(communityId: string): Promise<CommunityDrawerResult
     const context = await getRequestAuthContext();
     if (!context.authenticated || context.userType !== "tenant" || !context.organizationId) return { kind: "error" };
     const community = await getCommunityDetail(supabase, context.organizationId, access.consorcioScope, communityId);
-    return community ? { kind: "ok", community } : { kind: "not_found" };
+    if (!community) return { kind: "not_found" };
+    // A failure here only empties the Accesos tab; the rest of the drawer still shows.
+    const links = await listJoinLinks(supabase, community.id).catch(() => null);
+    return { kind: "ok", community, joinLinks: { links, canManage: context.role !== "VIEWER" } };
   } catch {
     return { kind: "error" };
   }
