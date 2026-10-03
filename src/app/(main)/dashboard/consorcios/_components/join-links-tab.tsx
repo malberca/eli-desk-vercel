@@ -4,7 +4,16 @@ import * as React from "react";
 
 import { useRouter } from "next/navigation";
 
-import { ListCell, ListEmpty, ListHead, ListTable, Pill } from "@/app/(main)/dashboard/_components/list-table";
+import { Eye } from "lucide-react";
+
+import {
+  ListActionButton,
+  ListCell,
+  ListEmpty,
+  ListHead,
+  ListTable,
+  Pill,
+} from "@/app/(main)/dashboard/_components/list-table";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -15,6 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { revokeJoinLinkAction } from "@/server/join-links/join-link-actions";
 import type { JoinLinkSummary } from "@/server/join-links/join-link-repository";
@@ -44,6 +54,7 @@ export function JoinLinksTab({
   data: JoinLinksTabData;
 }) {
   const router = useRouter();
+  const [viewing, setViewing] = React.useState<JoinLinkSummary | null>(null);
   const [revoking, setRevoking] = React.useState<JoinLinkSummary | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -86,24 +97,20 @@ export function JoinLinksTab({
             Con este link o QR los vecinos de {communityName} se dan de alta en ELI. Activo desde el{" "}
             {dateFormat.format(new Date(current.createdAt))}
           </p>
-          {data.canManage ? (
-            <JoinLinkQr
-              url={current.url}
-              communityName={communityName}
-              revokeLabel="Revocar"
-              busy={busy}
-              error={null}
-              onRevoke={() => setRevoking(current)}
-            />
-          ) : (
-            <p className="break-all rounded-lg border bg-muted/40 px-3 py-2 font-mono text-xs">{current.url}</p>
-          )}
+          <JoinLinkQr
+            url={current.url}
+            communityName={communityName}
+            revokeLabel="Revocar"
+            busy={busy}
+            error={null}
+            onRevoke={data.canManage ? () => setRevoking(current) : undefined}
+          />
         </section>
       ) : (
         <div className="space-y-4 rounded-xl border border-dashed bg-card p-8 text-center">
           <p className="text-muted-foreground text-sm">
-            El link activo se creó antes de que se guardara su QR, así que no se puede mostrar. Revocalo y creá uno
-            nuevo.
+            Este link funciona, pero se creó antes de que ELI guardara los QR, así que no se puede mostrar. Si necesitás
+            el QR, creá un link nuevo. Cuando reemplaces el QR pegado en el edificio, revocá este.
           </p>
           {createButton}
         </div>
@@ -120,7 +127,7 @@ export function JoinLinksTab({
               <TableRow>
                 <ListHead>Creado</ListHead>
                 <ListHead>Estado</ListHead>
-                {data.canManage && <ListHead>Acciones</ListHead>}
+                <ListHead>Acciones</ListHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -137,21 +144,78 @@ export function JoinLinksTab({
                       </p>
                     )}
                   </ListCell>
-                  {data.canManage && (
-                    <ListCell>
-                      {link.status === "active" && (
-                        <Button variant="outline" className="h-9" onClick={() => setRevoking(link)}>
-                          Revocar
-                        </Button>
-                      )}
-                    </ListCell>
-                  )}
+                  <ListCell>
+                    {link.status === "active" && (
+                      <div className="flex items-center gap-2">
+                        <ListActionButton onClick={() => setViewing(link)}>
+                          <Eye className="size-4" />
+                          Ver
+                        </ListActionButton>
+                        {data.canManage && (
+                          <ListActionButton onClick={() => setRevoking(link)}>Revocar</ListActionButton>
+                        )}
+                      </div>
+                    )}
+                  </ListCell>
                 </TableRow>
               ))}
             </TableBody>
           </ListTable>
         </section>
       )}
+
+      <Dialog open={viewing !== null} onOpenChange={(next) => !next && setViewing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Link de acceso</DialogTitle>
+            <DialogDescription>
+              {viewing &&
+                `Con este link o QR los vecinos de ${communityName} se dan de alta en ELI. Activo desde el ${dateFormat.format(new Date(viewing.createdAt))}`}
+            </DialogDescription>
+          </DialogHeader>
+          {viewing && !viewing.url && (
+            <div className="space-y-4">
+              <p className="rounded-lg border border-dashed p-4 text-center text-muted-foreground text-sm">
+                Este link funciona, pero se creó antes de que ELI guardara los QR, así que no se puede mostrar. Si
+                necesitás el QR, creá un link nuevo. Cuando reemplaces el QR pegado en el edificio, revocá este.
+              </p>
+              {data.canManage && (
+                <div className="flex justify-between gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => {
+                      setRevoking(viewing);
+                      setViewing(null);
+                    }}
+                  >
+                    Revocar
+                  </Button>
+                  {createButton}
+                </div>
+              )}
+            </div>
+          )}
+          {viewing?.url && (
+            <JoinLinkQr
+              url={viewing.url}
+              communityName={communityName}
+              revokeLabel="Revocar"
+              busy={busy}
+              error={null}
+              onRevoke={
+                data.canManage
+                  ? () => {
+                      setRevoking(viewing);
+                      setViewing(null);
+                    }
+                  : undefined
+              }
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog
         open={revoking !== null}

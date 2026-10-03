@@ -33,7 +33,8 @@ export function JoinLinkQr({
   revokeLabel: string;
   busy: boolean;
   error: string | null;
-  onRevoke: () => void;
+  // Omitted for users who can only view (VIEWER).
+  onRevoke?: () => void;
 }) {
   const svgId = React.useId();
   const [copied, setCopied] = React.useState(false);
@@ -51,16 +52,20 @@ export function JoinLinkQr({
       <p className="break-all rounded-lg border bg-muted/40 px-3 py-2 font-mono text-xs">{url}</p>
       {error && <p className="text-destructive text-sm">{error}</p>}
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-        <Button
-          type="button"
-          variant="ghost"
-          className="text-destructive hover:text-destructive"
-          disabled={busy}
-          onClick={onRevoke}
-        >
-          {busy && <Loader2 className="size-4 animate-spin" />}
-          {revokeLabel}
-        </Button>
+        {onRevoke ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-destructive hover:text-destructive"
+            disabled={busy}
+            onClick={onRevoke}
+          >
+            {busy && <Loader2 className="size-4 animate-spin" />}
+            {revokeLabel}
+          </Button>
+        ) : (
+          <span />
+        )}
         <div className="flex flex-col-reverse gap-2 sm:flex-row">
           <Button
             type="button"
