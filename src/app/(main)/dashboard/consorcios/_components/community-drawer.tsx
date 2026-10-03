@@ -28,10 +28,11 @@ import { ActiveTicketsTable } from "./active-tickets-table";
 import { CommunityStatusPill } from "./communities-list";
 import { relationshipLabel } from "./community-labels";
 import { sortUnits } from "./filter-units";
+import { JoinLinksTab, type JoinLinksTabData } from "./join-links-tab";
 import { UnitsTable } from "./units-table";
 
 export type CommunityDrawerResult =
-  | { kind: "ok"; community: CommunityDetail }
+  | { kind: "ok"; community: CommunityDetail; joinLinks: JoinLinksTabData }
   | { kind: "not_found" }
   | { kind: "error" };
 
@@ -70,7 +71,7 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-function CommunityDetailView({ community }: { community: CommunityDetail }) {
+function CommunityDetailView({ community, joinLinks }: { community: CommunityDetail; joinLinks: JoinLinksTabData }) {
   const residents = sortUnits(community.units).flatMap((unit) =>
     unit.residents.map((resident) => ({ ...resident, unitNumber: unit.number })),
   );
@@ -101,6 +102,7 @@ function CommunityDetailView({ community }: { community: CommunityDetail }) {
           <TabsTrigger value="unidades">Unidades</TabsTrigger>
           <TabsTrigger value="residentes">Residentes</TabsTrigger>
           <TabsTrigger value="tickets">Tickets</TabsTrigger>
+          <TabsTrigger value="accesos">Accesos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumen" className="space-y-4 pt-4">
@@ -176,6 +178,15 @@ function CommunityDetailView({ community }: { community: CommunityDetail }) {
             </>
           )}
         </TabsContent>
+
+        <TabsContent value="accesos" className="pt-4">
+          <JoinLinksTab
+            communityId={community.id}
+            communityName={community.name}
+            address={community.address}
+            data={joinLinks}
+          />
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -195,7 +206,7 @@ export function CommunityDrawer({ result }: { result: CommunityDrawerResult }) {
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-2xl">
         {result.kind === "ok" ? (
-          <CommunityDetailView community={result.community} />
+          <CommunityDetailView community={result.community} joinLinks={result.joinLinks} />
         ) : (
           <div className="space-y-2 pt-8 text-center">
             <SheetTitle>
