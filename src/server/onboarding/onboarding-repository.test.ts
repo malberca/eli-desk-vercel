@@ -47,7 +47,7 @@ const ROWS = {
       last_name: "Paz",
       email: "a@x.com",
       phone: "11",
-      relationship_type: "propietario",
+      relationship_type_code: "propietario",
       status: "PENDING_VERIFICATION",
       created_at: "2026-09-24T10:00:00Z",
     },
@@ -60,7 +60,7 @@ const ROWS = {
       email: "b@x.com",
 
       phone: null,
-      relationship_type: "inquilino",
+      relationship_type_code: "inquilino",
       status: "APPROVED",
       created_at: "2026-09-23T10:00:00Z",
     },
