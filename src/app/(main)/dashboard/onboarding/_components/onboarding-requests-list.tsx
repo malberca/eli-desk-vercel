@@ -17,7 +17,7 @@ import {
   Pill,
   type Tone,
 } from "@/app/(main)/dashboard/_components/list-table";
-import { relationshipLabel } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
+import { relationshipLabel, relationshipTone } from "@/app/(main)/dashboard/consorcios/_components/community-labels";
 import { TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { OnboardingRequest } from "@/server/onboarding/onboarding-repository";
 
@@ -28,10 +28,6 @@ const STATUS_LABELS: Record<string, string> = {
 };
 const STATUS_TONES: Record<string, Tone> = {
   PENDING_VERIFICATION: "amber",
-};
-const RELATIONSHIP_TONES: Record<string, Tone> = {
-  propietario: "blue",
-  inquilino: "violet",
 };
 const dateFormat = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short", year: "numeric" });
 
@@ -121,7 +117,7 @@ export function OnboardingRequestsList({ requests }: { requests: OnboardingReque
                   <p>Unidad {request.unitNumber ?? "s/n"}</p>
                 </ListCell>
                 <ListCell>
-                  <Pill tone={RELATIONSHIP_TONES[request.relationship.toLowerCase()] ?? "neutral"}>
+                  <Pill tone={relationshipTone(request.relationship)}>
                     {relationshipLabel(request.relationship) ?? "Sin definir"}
                   </Pill>
                 </ListCell>

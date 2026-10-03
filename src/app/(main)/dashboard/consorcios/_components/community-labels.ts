@@ -1,3 +1,5 @@
+import type { Tone } from "@/app/(main)/dashboard/_components/list-table";
+
 const COMMUNITY_STATUS_LABELS: Record<string, string> = { activo: "Activo", inactivo: "Inactivo" };
 const UNIT_STATUS_LABELS: Record<string, string> = { ocupado: "Ocupada", desocupado: "Desocupada" };
 const UNIT_TYPE_LABELS: Record<string, string> = { departamento: "Departamento" };
@@ -18,3 +20,8 @@ export const communityStatusLabel = (value: string | null) => label(COMMUNITY_ST
 export const unitStatusLabel = (value: string | null) => label(UNIT_STATUS_LABELS, value);
 export const unitTypeLabel = (value: string | null) => label(UNIT_TYPE_LABELS, value);
 export const relationshipLabel = (value: string | null) => label(RELATIONSHIP_LABELS, value);
+
+// Same colors wherever a relationship shows as a pill (Signup, Residentes).
+const RELATIONSHIP_TONES: Record<string, Tone> = { propietario: "blue", inquilino: "violet" };
+export const relationshipTone = (value: string | null): Tone =>
+  (value && RELATIONSHIP_TONES[value.toLowerCase()]) || "neutral";
